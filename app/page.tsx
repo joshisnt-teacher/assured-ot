@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 export default function HomePage() {
   const frameRef = useRef<HTMLDivElement>(null)
+  const [openFaq, setOpenFaq] = useState<string | null>(null)
 
   useEffect(() => {
     const frame = frameRef.current
     if (!frame) return
+    // Parallax disabled for users who prefer reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const onMove = (e: MouseEvent) => {
       const rect = frame.getBoundingClientRect()
       const dx = (e.clientX - (rect.left + rect.width / 2)) / window.innerWidth
@@ -22,7 +25,7 @@ export default function HomePage() {
   return (
     <>
       {/* ══════════ HERO ══════════ */}
-      <section className="hp-hero" id="hero">
+      <section className="hp-hero" id="hero" aria-label="Welcome">
         <div className="hp-chrome-top">
           <span>Est. 2018<span className="hp-eyebrow-dot"></span>NDIS Registered</span>
           <span>Perth, Western Australia<span className="hp-eyebrow-dot"></span>Paediatric OT</span>
@@ -31,7 +34,7 @@ export default function HomePage() {
         <div className="hp-hero-grid">
           {/* LEFT */}
           <div className="hp-hero-left">
-            <div className="hp-eyebrow">A practice of one — Jeimer Carter</div>
+            <div className="hp-eyebrow">A practice of one — Jeimer Ng</div>
 
             <h1 className="hp-headline">
               Therapy that{' '}
@@ -45,7 +48,7 @@ export default function HomePage() {
               by <span className="their">their</span> rules.
             </h1>
 
-            <span className="hp-caveat-note">
+            <span className="hp-caveat-note" aria-hidden="true">
               <span style={{ display: 'inline-block', transform: 'rotate(8deg)', marginRight: '4px' }}>↳</span>
               {' '}joy is the goal.
             </span>
@@ -117,11 +120,11 @@ export default function HomePage() {
                 <svg className="hp-corner br" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"><path d="M2 12 L 2 2 L 12 2" /></svg>
 
                 <div className="hp-frame-caption">
-                  <div className="who">
+                  <div className="who" aria-label="Lucas, aged 8. Switch and adaptive controller user.">
                     Lucas, 8
                     <small>Switch · Adaptive controller</small>
                   </div>
-                  <div className="roll">Roll 02<br />Frame 14</div>
+                  <div className="roll" aria-hidden="true">Roll 02<br />Frame 14</div>
                 </div>
               </div>
 
@@ -147,11 +150,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Bottom chrome */}
-        <div className="hp-hero-bottom">
+        {/* Bottom chrome — decorative annotations, hidden from screen readers */}
+        <div className="hp-hero-bottom" aria-hidden="true">
           <div className="left">Folio 01 / 06 — Welcome</div>
           <div className="center">
-            <span className="scroll-ring" aria-hidden="true">
+            <span className="scroll-ring">
               <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 4 L 6 8 L 10 4" />
               </svg>
@@ -205,7 +208,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ ABOUT ══════════ */}
-      <section className="hp-section" id="about">
+      <section className="hp-section" id="about" aria-label="About Jeimer">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 02 — About</span>
@@ -216,40 +219,20 @@ export default function HomePage() {
             <div className="hp-about-portrait-wrap">
               <div className="hp-about-portrait-offset" aria-hidden="true"></div>
               <div className="hp-about-portrait">
-                <svg className="hp-about-portrait-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-                  <g fill="none" stroke="#1E2D40" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M 0 380 Q 100 374 200 378 T 400 374" strokeOpacity="0.35" />
-                    <path d="M 40 380 L 110 320 L 150 350 L 220 290 L 280 340 L 340 310 L 380 360" strokeOpacity="0.45" strokeWidth="1.2" />
-                    <g strokeWidth="0.8" strokeOpacity="0.35">
-                      <line x1="222" y1="300" x2="240" y2="328" /><line x1="230" y1="296" x2="252" y2="334" /><line x1="240" y1="296" x2="262" y2="338" />
-                    </g>
-                    <g strokeWidth="1.2">
-                      <g transform="translate(90 388)"><path d="M0 0 L 0 -8" /><path d="M-9 -8 L 0 -22 L 9 -8 Z M -6 -16 L 0 -28 L 6 -16 Z M -4 -22 L 0 -34 L 4 -22 Z" /></g>
-                      <g transform="translate(118 390)"><path d="M0 0 L 0 -6" /><path d="M-7 -6 L 0 -18 L 7 -6 Z M -5 -14 L 0 -24 L 5 -14 Z" /></g>
-                      <g transform="translate(310 388)"><path d="M0 0 L 0 -10" /><path d="M-10 -10 L 0 -26 L 10 -10 Z M -7 -18 L 0 -30 L 7 -18 Z M -5 -26 L 0 -38 L 5 -26 Z" /></g>
-                    </g>
-                    <circle cx="170" cy="240" r="20" />
-                    <path d="M158 224 Q 162 214 170 216" /><path d="M172 216 Q 180 214 184 222" />
-                    <path d="M152 264 Q 144 312 156 360" /><path d="M188 264 Q 196 312 184 360" />
-                    <path d="M155 268 L 145 338" /><path d="M186 268 L 198 338" />
-                    <circle cx="240" cy="316" r="14" />
-                    <path d="M230 326 Q 228 360 240 366" /><path d="M250 326 Q 252 360 240 366" />
-                    <path d="M226 358 L 256 358" strokeOpacity="0.6" />
-                    <rect x="198" y="332" width="36" height="22" rx="3" />
-                    <line x1="216" y1="338" x2="216" y2="348" strokeOpacity="0.5" />
-                    <g stroke="#C4724A" strokeWidth="1.4">
-                      <path d="M240 286 L 240 274" /><path d="M226 292 L 218 286" /><path d="M254 292 L 262 286" />
-                    </g>
-                  </g>
-                </svg>
+                <img
+                  src="/images/profilePic.jpg"
+                  alt="Jeimer, occupational therapist"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ zIndex: 1 }}
+                />
 
                 <svg className="hp-about-corner tl" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
                 <svg className="hp-about-corner tr" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
                 <svg className="hp-about-corner bl" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
                 <svg className="hp-about-corner br" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
 
-                <span className="hp-about-caption">Jeimer, working<small>Lucas&apos;s lounge · 2025</small></span>
-                <span className="hp-about-stamp">Roll 03<br />Frame 02</span>
+                <span className="hp-about-caption">Jeimer, working<small>Perth, WA · 2025</small></span>
+                <span className="hp-about-stamp" aria-hidden="true">Roll 03<br />Frame 02</span>
               </div>
             </div>
 
@@ -272,13 +255,13 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ SERVICES ══════════ */}
-      <section className="hp-section hp-section--sand" id="services">
+      <section className="hp-section hp-section--sand" id="services" aria-label="Services">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 03 — Services</span>
             <div>
               <h2 className="hp-display">What I <em>work on</em>.</h2>
-              <span className="hp-caveat-deco">↳ all NDIS-billable</span>
+              <span className="hp-caveat-deco" aria-hidden="true">↳ all NDIS-billable</span>
             </div>
           </header>
 
@@ -307,7 +290,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ PROCESS ══════════ */}
-      <section className="hp-section hp-process" id="process">
+      <section className="hp-section hp-process" id="process" aria-label="How it works">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 04 — How it works</span>
@@ -339,7 +322,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ STORIES ══════════ */}
-      <section className="hp-section" id="stories">
+      <section className="hp-section" id="stories" aria-label="Stories from the field">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 05 — Stories from the field</span>
@@ -420,7 +403,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ PRACTITIONERS ══════════ */}
-      <section className="hp-section hp-section--navy" id="practitioners">
+      <section className="hp-section hp-section--navy" id="practitioners" aria-label="For practitioners">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 06 — For practitioners</span>
@@ -434,15 +417,15 @@ export default function HomePage() {
               </p>
               <div className="hp-dl-row">
                 <a href="#" className="hp-dl">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
                   Referral form <span className="hp-dl-ext">PDF · 84 KB</span>
                 </a>
                 <a href="#" className="hp-dl">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
                   Service brochure <span className="hp-dl-ext">PDF · 1.2 MB</span>
                 </a>
                 <a href="mailto:hello@assuredot.com.au" className="hp-dl">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 L 11 5" /><path d="M6 5 L 11 5 L 11 10" /></svg>
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 11 L 11 5" /><path d="M6 5 L 11 5 L 11 10" /></svg>
                   Email Jeimer <span className="hp-dl-ext">hello@assuredot.com.au</span>
                 </a>
               </div>
@@ -472,7 +455,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════ FAQ ══════════ */}
-      <section className="hp-section" id="faq">
+      <section className="hp-section" id="faq" aria-label="Common questions">
         <div className="hp-container">
           <header className="hp-section-head">
             <span className="hp-folio">§ 07 — Common questions</span>
@@ -481,30 +464,47 @@ export default function HomePage() {
 
           <div className="hp-faq">
             {[
-              { num: '/ 01', q: 'Are you NDIS registered?', a: <>Yes — registered NDIS provider, number <em>#4050000142</em>. I work with plan-managed, self-managed and agency-managed plans. If you&apos;re not on NDIS, we can still talk about private options.</> },
-              { num: '/ 02', q: 'What ages do you work with?', a: 'Three to eighteen. The bulk of the work happens between six and fourteen, but I\'ll always have a chat about anyone in that range — sometimes earlier or later makes sense.' },
-              { num: '/ 03', q: 'Do you offer telehealth?', a: 'Sometimes — for catch-ups, planning sessions, family check-ins. The hands-on work happens in person. Most of what I do revolves around equipment, and equipment needs a body in the room.' },
-              { num: '/ 04', q: 'How much does it cost?', a: <>Standard NDIS price guide rates. <em>$193.99/hr</em> for OT, plus travel for home and school visits within reasonable distance. The initial 20-minute chat is free, and you only commit to anything after we&apos;ve spoken.</> },
-              { num: '/ 05', q: 'Do you do home visits?', a: 'Yes — most of my sessions happen at clients\' homes. Perth metro and out to Mandurah without extra charge. Further afield, we\'ll have a conversation about travel. Schools and clinics also welcome.' },
-              { num: '/ 06', q: "What if my child doesn't speak?", a: "Most of the kids I work with communicate in ways that aren't speech. We'll find the channel — AAC, eye-gaze, switches, gestures, drawings, whatever works. The therapy doesn't depend on words." },
-            ].map(({ num, q, a }) => (
-              <details className="hp-faq-item" key={num}>
-                <summary className="hp-faq-trigger">
-                  <span className="hp-faq-num">{num}</span>
-                  <span className="hp-faq-q">{q}</span>
-                  <span className="hp-faq-plus" aria-hidden="true"></span>
-                </summary>
-                <div className="hp-faq-a">
-                  <div className="hp-faq-a-inner">{a}</div>
+              { num: '/ 01', id: 'faq-01', q: 'Are you NDIS registered?', a: <>Yes — registered NDIS provider, number <em>#4050000142</em>. I work with plan-managed, self-managed and agency-managed plans. If you&apos;re not on NDIS, we can still talk about private options.</> },
+              { num: '/ 02', id: 'faq-02', q: 'What ages do you work with?', a: 'Three to eighteen. The bulk of the work happens between six and fourteen, but I\'ll always have a chat about anyone in that range — sometimes earlier or later makes sense.' },
+              { num: '/ 03', id: 'faq-03', q: 'Do you offer telehealth?', a: 'Sometimes — for catch-ups, planning sessions, family check-ins. The hands-on work happens in person. Most of what I do revolves around equipment, and equipment needs a body in the room.' },
+              { num: '/ 04', id: 'faq-04', q: 'How much does it cost?', a: <>Standard NDIS price guide rates. <em>$193.99/hr</em> for OT, plus travel for home and school visits within reasonable distance. The initial 20-minute chat is free, and you only commit to anything after we&apos;ve spoken.</> },
+              { num: '/ 05', id: 'faq-05', q: 'Do you do home visits?', a: 'Yes — most of my sessions happen at clients\' homes. Perth metro and out to Mandurah without extra charge. Further afield, we\'ll have a conversation about travel. Schools and clinics also welcome.' },
+              { num: '/ 06', id: 'faq-06', q: "What if my child doesn't speak?", a: "Most of the kids I work with communicate in ways that aren't speech. We'll find the channel — AAC, eye-gaze, switches, gestures, drawings, whatever works. The therapy doesn't depend on words." },
+            ].map(({ num, id, q, a }) => {
+              const panelId = `${id}-panel`
+              const isOpen = openFaq === id
+              return (
+                <div className={`hp-faq-item${isOpen ? ' is-open' : ''}`} key={id}>
+                  <button
+                    type="button"
+                    id={id}
+                    className="hp-faq-trigger"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => setOpenFaq(isOpen ? null : id)}
+                  >
+                    <span className="hp-faq-num" aria-hidden="true">{num}</span>
+                    <span className="hp-faq-q">{q}</span>
+                    <span className="hp-faq-plus" aria-hidden="true"></span>
+                  </button>
+                  <div
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={id}
+                    className="hp-faq-a"
+                    aria-hidden={!isOpen}
+                  >
+                    <div className="hp-faq-a-inner">{a}</div>
+                  </div>
                 </div>
-              </details>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* ══════════ CONTACT ══════════ */}
-      <section className="hp-contact-section" id="contact">
+      <section className="hp-contact-section" id="contact" aria-label="Let's talk">
         <div className="hp-contact-block">
           <div className="hp-contact-grid">
             <div>
@@ -512,7 +512,7 @@ export default function HomePage() {
               <h2 className="hp-contact-display" style={{ marginTop: '24px' }}>
                 Let&apos;s chat about <em>your kid</em>.
               </h2>
-              <span className="hp-contact-caveat">↳ no clipboards, promise.</span>
+              <span className="hp-contact-caveat" aria-hidden="true">↳ no clipboards, promise.</span>
               <div style={{ marginTop: '8px' }}>
                 <a href="tel:+61865550142" className="hp-btn">
                   Book a 20-min chat

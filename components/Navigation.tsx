@@ -91,19 +91,22 @@ export default function Navigation() {
         </Link>
 
         {/* Desktop nav links */}
-        <ul className="hp-nav-links" role="list">
-          {NAV_LINKS.map((item) => (
-            <li key={item.hash}>
-              <a
-                href={linkHref(item)}
-                className={isActive(item) ? 'is-active' : ''}
-              >
-                <span className="num">{item.num}</span>
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <nav aria-label="Primary navigation">
+          <ul className="hp-nav-links" role="list">
+            {NAV_LINKS.map((item) => (
+              <li key={item.hash}>
+                <a
+                  href={linkHref(item)}
+                  aria-label={item.label}
+                  className={isActive(item) ? 'is-active' : ''}
+                >
+                  <span className="num" aria-hidden="true">{item.num}</span>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         {/* Right side */}
         <div className="hp-nav-right">
@@ -141,11 +144,12 @@ export default function Navigation() {
             <a
               key={item.hash}
               href={linkHref(item)}
+              aria-label={item.label}
               onClick={() => setMenuOpen(false)}
               style={{ transitionDelay: menuOpen ? `${i * 55}ms` : '0ms' }}
               className={isActive(item) ? 'is-active' : ''}
             >
-              <span className="num">{item.num}</span>
+              <span className="num" aria-hidden="true">{item.num}</span>
               {item.label}
             </a>
           ))}

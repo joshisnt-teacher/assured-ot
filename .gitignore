@@ -30,3 +30,4 @@ Thumbs.db
 !.vscode/extensions.json
 .idea
 dist/
+tsconfig.tsbuildinfo

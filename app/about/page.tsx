@@ -71,38 +71,17 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* Illustration */}
+            {/* Photo */}
             <div
               className="relative aspect-[4/3] rounded-[16px] overflow-hidden"
               style={{ background: 'var(--sketch-cream)' }}
-              aria-label="Illustration of Jeimer at work"
+              aria-label="Photo of Jeimer with assistive technology"
             >
-              <svg viewBox="0 0 400 300" className="w-full h-full p-6" fill="none" aria-hidden="true">
-                {/* Person at desk with child */}
-                <rect x="60" y="180" width="280" height="10" rx="3" stroke="var(--navy)" strokeWidth="1.5" />
-                <line x1="80" y1="190" x2="80" y2="240" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="320" y1="190" x2="320" y2="240" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Laptop */}
-                <rect x="140" y="140" width="100" height="38" rx="3" stroke="var(--navy)" strokeWidth="1.2" fill="none" />
-                <line x1="130" y1="180" x2="250" y2="180" stroke="var(--navy)" strokeWidth="1" strokeLinecap="round" />
-                {/* Jeimer — adult figure left */}
-                <circle cx="110" cy="100" r="16" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <path d="M94 116 Q94 140 110 140 Q126 140 126 116" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <path d="M126 130 L155 160" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M94 130 L80 155" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Child figure right */}
-                <circle cx="290" cy="115" r="12" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <path d="M278 127 Q278 148 290 148 Q302 148 302 127" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                {/* Wheelchair */}
-                <circle cx="265" cy="200" r="20" stroke="var(--navy)" strokeWidth="1.3" fill="none" />
-                <circle cx="308" cy="208" r="10" stroke="var(--navy)" strokeWidth="1.3" fill="none" />
-                <path d="M285 165 L275 192 L308 198" stroke="var(--navy)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                {/* Joy spark between them */}
-                <path d="M195 120 L205 110 L215 120" stroke="var(--terracotta)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                <path d="M200 105 L200 115" stroke="var(--terracotta)" strokeWidth="1.2" strokeLinecap="round" />
-                {/* Mountain background */}
-                <path d="M0 260 L80 200 L160 230 L250 180 L340 210 L400 185 L400 300 L0 300 Z" stroke="var(--navy)" strokeWidth="0.8" fill="none" opacity="0.15" />
-              </svg>
+              <img
+                src="/images/holdingDevices.jpg"
+                alt="Jeimer holding adaptive gaming controllers and assistive technology"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>

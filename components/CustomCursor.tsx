@@ -14,6 +14,9 @@ export default function CustomCursor() {
     const el = cursorRef.current
     if (!el) return
 
+    // Respect prefers-reduced-motion — CSS hides the element; bail out of JS too
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
     // Spring-follow with lag
     const animate = () => {
       const dx = pos.current.x - current.current.x

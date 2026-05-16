@@ -22,6 +22,12 @@ export default function RevealOnScroll({
     const el = ref.current
     if (!el) return
 
+    // Reduced motion: show immediately, no movement
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
