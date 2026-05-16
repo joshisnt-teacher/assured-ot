@@ -2,6 +2,198 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { CheckCircle, AlertCircle } from 'lucide-react'
+
+function HomeContactForm() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [message, setMessage] = useState('')
+  const [errors, setErrors] = useState<{ [k: string]: string }>({})
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const validate = () => {
+    const errs: { [k: string]: string } = {}
+    if (!name.trim()) errs.name = 'Please enter your name.'
+    if (!email.trim()) errs.email = 'Please enter your email.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Please enter a valid email.'
+    if (!message.trim()) errs.message = 'Please enter a message.'
+    return errs
+  }
+
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length) { setErrors(errs); return }
+    setSubmitting(true)
+    await new Promise((r) => setTimeout(r, 1000))
+    setSubmitting(false)
+    setSubmitted(true)
+  }
+
+  const clearError = (field: string) => setErrors((prev) => ({ ...prev, [field]: '' }))
+
+  const inputStyle = (err?: boolean) => ({
+    background: 'var(--off-white)',
+    border: `1.5px solid ${err ? 'var(--warm-red)' : 'var(--warm-stone)'}`,
+    color: 'var(--deep-ink)',
+    fontSize: '15px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    outline: 'none',
+    width: '100%',
+    lineHeight: '1.5',
+    fontFamily: 'var(--font-dm-sans)',
+  })
+
+  if (submitted) {
+    return (
+      <div
+        className="mt-8 p-6 rounded-card text-center"
+        style={{ background: 'var(--sketch-cream)', border: '1px solid var(--warm-stone)' }}
+        role="status"
+        aria-live="polite"
+      >
+        <CheckCircle size={36} className="mx-auto mb-3" style={{ color: 'var(--forest-green)' }} />
+        <p
+          className="font-sans font-medium"
+          style={{ fontSize: '15px', color: 'var(--deep-ink)' }}
+        >
+          Thanks — Jeimer will reply within the hour, usually sooner.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handle} noValidate aria-label="Contact form" className="mt-8 space-y-4">
+      <div>
+        <label
+          htmlFor="home-contact-name"
+          className="block font-sans font-medium uppercase tracking-wider mb-1.5"
+          style={{ fontSize: '12px', color: 'var(--warm-stone)' }}
+        >
+          Name *
+        </label>
+        <input
+          id="home-contact-name"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => { setName(e.target.value); clearError('name') }}
+          required
+          aria-required="true"
+          aria-describedby={errors.name ? 'home-name-err' : undefined}
+          aria-invalid={errors.name ? 'true' : undefined}
+          style={inputStyle(!!errors.name)}
+          onFocus={(e) => { if (!errors.name) e.target.style.borderColor = 'var(--navy)' }}
+          onBlur={(e) => { if (!errors.name) e.target.style.borderColor = 'var(--warm-stone)' }}
+        />
+        {errors.name && (
+          <div id="home-name-err" role="alert" className="flex items-center gap-1 mt-1 text-xs" style={{ color: 'var(--warm-red)' }}>
+            <AlertCircle size={12} />{errors.name}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="home-contact-email"
+            className="block font-sans font-medium uppercase tracking-wider mb-1.5"
+            style={{ fontSize: '12px', color: 'var(--warm-stone)' }}
+          >
+            Email *
+          </label>
+          <input
+            id="home-contact-email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); clearError('email') }}
+            required
+            aria-required="true"
+            aria-describedby={errors.email ? 'home-email-err' : undefined}
+            aria-invalid={errors.email ? 'true' : undefined}
+            style={inputStyle(!!errors.email)}
+            onFocus={(e) => { if (!errors.email) e.target.style.borderColor = 'var(--navy)' }}
+            onBlur={(e) => { if (!errors.email) e.target.style.borderColor = 'var(--warm-stone)' }}
+          />
+          {errors.email && (
+            <div id="home-email-err" role="alert" className="flex items-center gap-1 mt-1 text-xs" style={{ color: 'var(--warm-red)' }}>
+              <AlertCircle size={12} />{errors.email}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="home-contact-phone"
+            className="block font-sans font-medium uppercase tracking-wider mb-1.5"
+            style={{ fontSize: '12px', color: 'var(--warm-stone)' }}
+          >
+            Phone
+          </label>
+          <input
+            id="home-contact-phone"
+            name="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Optional"
+            style={inputStyle()}
+            onFocus={(e) => { e.target.style.borderColor = 'var(--navy)' }}
+            onBlur={(e) => { e.target.style.borderColor = 'var(--warm-stone)' }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="home-contact-message"
+          className="block font-sans font-medium uppercase tracking-wider mb-1.5"
+          style={{ fontSize: '12px', color: 'var(--warm-stone)' }}
+        >
+          Message *
+        </label>
+        <textarea
+          id="home-contact-message"
+          name="message"
+          value={message}
+          onChange={(e) => { setMessage(e.target.value); clearError('message') }}
+          required
+          aria-required="true"
+          aria-describedby={errors.message ? 'home-message-err' : undefined}
+          aria-invalid={errors.message ? 'true' : undefined}
+          rows={4}
+          placeholder="What's on your mind?"
+          style={{ ...inputStyle(!!errors.message), resize: 'vertical', minHeight: '100px' }}
+          onFocus={(e) => { if (!errors.message) e.target.style.borderColor = 'var(--navy)' }}
+          onBlur={(e) => { if (!errors.message) e.target.style.borderColor = 'var(--warm-stone)' }}
+        />
+        {errors.message && (
+          <div id="home-message-err" role="alert" className="flex items-center gap-1 mt-1 text-xs" style={{ color: 'var(--warm-red)' }}>
+            <AlertCircle size={12} />{errors.message}
+          </div>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="btn-arrow w-full sm:w-auto inline-flex items-center justify-center font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200"
+        style={{
+          background: submitting ? 'var(--warm-stone)' : 'var(--terracotta)',
+          color: 'white',
+          fontSize: '15px',
+        }}
+      >
+        {submitting ? 'Sending…' : <>Send message <span aria-hidden="true">→</span></>}
+      </button>
+    </form>
+  )
+}
 
 export default function HomePage() {
   const frameRef = useRef<HTMLDivElement>(null)
@@ -547,6 +739,9 @@ export default function HomePage() {
                   <small>By appointment, or I come to you.</small>
                 </span>
               </div>
+
+              {/* Inline contact form */}
+              <HomeContactForm />
             </div>
           </div>
         </div>

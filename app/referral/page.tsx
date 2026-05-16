@@ -3,21 +3,23 @@
 import { useState, FormEvent } from 'react'
 import MountainDivider from '@/components/MountainDivider'
 import RevealOnScroll from '@/components/RevealOnScroll'
-import SpotIllustration from '@/components/SpotIllustration'
-import { CheckCircle, AlertCircle, ChevronDown, Mail, Phone } from 'lucide-react'
+import { CheckCircle, AlertCircle, ChevronDown, Clock, FileText, Users, MapPin, Baby } from 'lucide-react'
 
 // ─── Form types ──────────────────────────────────────────────────────────────
 interface FormData {
   referrerName: string
-  relationship: string
+  referrerRole: string
+  organisation: string
+  referrerEmail: string
+  referrerPhone: string
   clientFirstName: string
   clientAge: string
+  diagnosis: string
   reason: string
-  email: string
-  phone: string
   ndisStatus: string
-  referralSource: string
+  familyContacted: string
   notes: string
+  consent: boolean
 }
 
 interface FormErrors {
@@ -26,18 +28,41 @@ interface FormErrors {
 
 const initialData: FormData = {
   referrerName: '',
-  relationship: '',
+  referrerRole: '',
+  organisation: '',
+  referrerEmail: '',
+  referrerPhone: '',
   clientFirstName: '',
   clientAge: '',
+  diagnosis: '',
   reason: '',
-  email: '',
-  phone: '',
   ndisStatus: '',
-  referralSource: '',
+  familyContacted: '',
   notes: '',
+  consent: false,
 }
 
-// ─── Input component ─────────────────────────────────────────────────────────
+const roleOptions = [
+  'GP',
+  'Paediatrician',
+  'OT',
+  'Speech Pathologist',
+  'Physio',
+  'School',
+  'Hospital',
+  'Parent',
+  'Other',
+]
+
+const ndisOptions = [
+  { value: 'plan-managed', label: 'Plan-managed' },
+  { value: 'self-managed', label: 'Self-managed' },
+  { value: 'agency-managed', label: 'Agency-managed' },
+  { value: 'not-on-ndis', label: 'Not on NDIS' },
+  { value: 'unknown', label: 'Unknown' },
+]
+
+// ─── Input components ────────────────────────────────────────────────────────
 function Field({
   id,
   label,
@@ -113,7 +138,7 @@ function TextInput({
       required={required}
       aria-required={required}
       aria-describedby={describedBy}
-      aria-invalid={error ? ('true' as const) : undefined}
+      aria-invalid={error ? 'true' : undefined}
       inputMode={inputMode}
       className="w-full font-sans rounded-lg"
       style={{
@@ -136,14 +161,14 @@ function TextInput({
   )
 }
 
-// ─── Referral form ────────────────────────────────────────────────────────────
+// ─── Referral form ───────────────────────────────────────────────────────────
 function ReferralForm() {
   const [data, setData] = useState<FormData>(initialData)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const set = (field: keyof FormData) => (value: string) => {
+  const set = (field: keyof FormData) => (value: string | boolean) => {
     setData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }))
   }
@@ -151,16 +176,19 @@ function ReferralForm() {
   const validate = (): FormErrors => {
     const errs: FormErrors = {}
     if (!data.referrerName.trim()) errs.referrerName = 'Please enter your name.'
-    if (!data.relationship) errs.relationship = 'Please select your relationship to the client.'
-    if (!data.clientFirstName.trim()) errs.clientFirstName = 'Please enter the client\'s first name.'
-    if (!data.clientAge.trim()) errs.clientAge = 'Please enter the client\'s age.'
-    if (!data.reason.trim()) errs.reason = 'Please briefly describe the reason for referral.'
-    if (!data.email.trim()) {
-      errs.email = 'Please enter your email address.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      errs.email = 'Please enter a valid email address.'
+    if (!data.referrerRole) errs.referrerRole = 'Please select your role.'
+    if (!data.referrerEmail.trim()) {
+      errs.referrerEmail = 'Please enter your email address.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.referrerEmail)) {
+      errs.referrerEmail = 'Please enter a valid email address.'
     }
+    if (!data.clientFirstName.trim()) errs.clientFirstName = "Please enter the client's first name."
+    if (!data.clientAge.trim()) errs.clientAge = "Please enter the client's age."
+    if (!data.diagnosis.trim()) errs.diagnosis = 'Please enter a primary diagnosis or condition.'
+    if (!data.reason.trim()) errs.reason = 'Please briefly describe the reason for referral.'
     if (!data.ndisStatus) errs.ndisStatus = 'Please select an NDIS status.'
+    if (!data.familyContacted) errs.familyContacted = 'Please confirm whether the family has been contacted.'
+    if (!data.consent) errs.consent = 'Please confirm you have authority to share this information.'
     return errs
   }
 
@@ -169,14 +197,12 @@ function ReferralForm() {
     const errs = validate()
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
-      // Focus first error
       const firstErrId = Object.keys(errs)[0]
       document.getElementById(firstErrId)?.focus()
       return
     }
 
     setSubmitting(true)
-    // Simulate API call
     await new Promise((r) => setTimeout(r, 1200))
     setSubmitting(false)
     setSubmitted(true)
@@ -199,20 +225,13 @@ function ReferralForm() {
           className="font-lora font-bold mb-3"
           style={{ fontSize: '24px', color: 'var(--deep-ink)' }}
         >
-          Referral received — thank you.
+          Referral received.
         </h3>
         <p
           className="font-sans"
           style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.75 }}
         >
-          I'll be in touch within 2 business days. If you need to reach me sooner, email{' '}
-          <a
-            href="mailto:hello@assuredot.com.au"
-            style={{ color: 'var(--terracotta)' }}
-          >
-            hello@assuredot.com.au
-          </a>
-          .
+          Jeimer will be in touch within 24 hours, Mon–Fri AWST.
         </p>
       </div>
     )
@@ -225,268 +244,360 @@ function ReferralForm() {
       aria-label="Referral form"
     >
       <div className="space-y-5">
-        {/* Row 1 — Referrer name + relationship */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Field id="referrerName" label="Your name" required error={errors.referrerName}>
+        {/* ── Referrer details ── */}
+        <fieldset className="space-y-5">
+          <legend
+            className="font-lora font-bold mb-4 block"
+            style={{ fontSize: '20px', color: 'var(--deep-ink)' }}
+          >
+            About you
+          </legend>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field id="referrerName" label="Your name" required error={errors.referrerName}>
+              <TextInput
+                id="referrerName"
+                value={data.referrerName}
+                onChange={set('referrerName')}
+                placeholder="e.g. Dr Sarah Chen"
+                required
+                error={!!errors.referrerName}
+                describedBy={errors.referrerName ? 'referrerName-error' : undefined}
+              />
+            </Field>
+
+            <Field id="referrerRole" label="Your role" required error={errors.referrerRole}>
+              <div className="relative">
+                <select
+                  id="referrerRole"
+                  name="referrerRole"
+                  value={data.referrerRole}
+                  onChange={(e) => set('referrerRole')(e.target.value)}
+                  required
+                  aria-required="true"
+                  aria-describedby={errors.referrerRole ? 'referrerRole-error' : undefined}
+                  aria-invalid={errors.referrerRole ? 'true' : undefined}
+                  className="w-full font-sans rounded-lg appearance-none"
+                  style={{
+                    background: 'var(--off-white)',
+                    border: `1.5px solid ${errors.referrerRole ? 'var(--warm-red)' : 'var(--warm-stone)'}`,
+                    color: data.referrerRole ? 'var(--deep-ink)' : '#999',
+                    fontSize: '15px',
+                    padding: '12px 40px 12px 16px',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="" disabled>Select one</option>
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--warm-stone)' }}
+                />
+              </div>
+            </Field>
+          </div>
+
+          <Field id="organisation" label="Organisation / practice name">
             <TextInput
-              id="referrerName"
-              value={data.referrerName}
-              onChange={set('referrerName')}
-              placeholder="e.g. Dr Sarah Chen"
-              required
-              error={!!errors.referrerName}
-              describedBy={errors.referrerName ? 'referrerName-error' : undefined}
+              id="organisation"
+              value={data.organisation}
+              onChange={set('organisation')}
+              placeholder="e.g. Perth Children's Hospital"
             />
           </Field>
 
-          <Field id="relationship" label="Your relationship to the client" required error={errors.relationship}>
-            <div className="relative">
-              <select
-                id="relationship"
-                name="relationship"
-                value={data.relationship}
-                onChange={(e) => set('relationship')(e.target.value)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field id="referrerEmail" label="Your email" required error={errors.referrerEmail}>
+              <TextInput
+                id="referrerEmail"
+                value={data.referrerEmail}
+                onChange={set('referrerEmail')}
+                placeholder="your@email.com"
+                type="email"
+                required
+                error={!!errors.referrerEmail}
+                describedBy={errors.referrerEmail ? 'referrerEmail-error' : undefined}
+              />
+            </Field>
+
+            <Field id="referrerPhone" label="Your phone">
+              <TextInput
+                id="referrerPhone"
+                value={data.referrerPhone}
+                onChange={set('referrerPhone')}
+                placeholder="0400 000 000"
+                type="tel"
+              />
+            </Field>
+          </div>
+        </fieldset>
+
+        <div
+          className="my-6"
+          style={{ borderTop: '1px solid var(--warm-stone)', opacity: 0.4 }}
+        />
+
+        {/* ── Client details ── */}
+        <fieldset className="space-y-5">
+          <legend
+            className="font-lora font-bold mb-4 block"
+            style={{ fontSize: '20px', color: 'var(--deep-ink)' }}
+          >
+            About the client
+          </legend>
+
+          <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-5">
+            <Field id="clientFirstName" label="Client's first name" required error={errors.clientFirstName}>
+              <TextInput
+                id="clientFirstName"
+                value={data.clientFirstName}
+                onChange={set('clientFirstName')}
+                placeholder="First name only is fine"
+                required
+                error={!!errors.clientFirstName}
+                describedBy={errors.clientFirstName ? 'clientFirstName-error' : undefined}
+              />
+            </Field>
+
+            <Field id="clientAge" label="Age" required error={errors.clientAge}>
+              <TextInput
+                id="clientAge"
+                value={data.clientAge}
+                onChange={set('clientAge')}
+                placeholder="e.g. 9"
+                type="text"
+                inputMode="numeric"
+                required
+                error={!!errors.clientAge}
+                describedBy={errors.clientAge ? 'clientAge-error' : undefined}
+              />
+            </Field>
+          </div>
+
+          <Field id="diagnosis" label="Primary diagnosis or condition" required error={errors.diagnosis}>
+            <TextInput
+              id="diagnosis"
+              value={data.diagnosis}
+              onChange={set('diagnosis')}
+              placeholder="e.g. Cerebral palsy, spinal muscular atrophy"
+              required
+              error={!!errors.diagnosis}
+              describedBy={errors.diagnosis ? 'diagnosis-error' : undefined}
+            />
+          </Field>
+
+          <Field id="reason" label="Reason for referral" required error={errors.reason}>
+            <div>
+              <textarea
+                id="reason"
+                name="reason"
+                value={data.reason}
+                onChange={(e) => set('reason')(e.target.value)}
+                placeholder="What are you hoping OT can help with? Goals, equipment needs, gaming access, school support — whatever's relevant."
                 required
                 aria-required="true"
-                aria-describedby={errors.relationship ? 'relationship-error' : undefined}
-                aria-invalid={errors.relationship ? 'true' : undefined}
-                className="w-full font-sans rounded-lg appearance-none"
+                aria-describedby={errors.reason ? 'reason-error' : undefined}
+                aria-invalid={errors.reason ? 'true' : undefined}
+                rows={4}
+                className="w-full font-sans rounded-lg resize-y"
                 style={{
                   background: 'var(--off-white)',
-                  border: `1.5px solid ${errors.relationship ? 'var(--warm-red)' : 'var(--warm-stone)'}`,
-                  color: data.relationship ? 'var(--deep-ink)' : '#999',
+                  border: `1.5px solid ${errors.reason ? 'var(--warm-red)' : 'var(--warm-stone)'}`,
+                  color: 'var(--deep-ink)',
                   fontSize: '15px',
-                  padding: '12px 40px 12px 16px',
+                  lineHeight: '1.65',
+                  padding: '12px 16px',
                   outline: 'none',
+                  minHeight: '100px',
                 }}
-              >
-                <option value="" disabled>Select one</option>
-                <option value="parent">Parent / carer</option>
-                <option value="practitioner">Allied health practitioner</option>
-                <option value="gp">GP / paediatrician</option>
-                <option value="school">School staff</option>
-                <option value="other">Other</option>
-              </select>
-              <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                style={{ color: 'var(--warm-stone)' }}
+                onFocus={(e) => {
+                  if (!errors.reason) e.target.style.borderColor = 'var(--navy)'
+                }}
+                onBlur={(e) => {
+                  if (!errors.reason) e.target.style.borderColor = 'var(--warm-stone)'
+                }}
               />
+              {errors.reason && (
+                <div
+                  role="alert"
+                  className="flex items-center gap-1.5 font-sans mt-1"
+                  style={{ fontSize: '13px', color: 'var(--warm-red)' }}
+                  id="reason-error"
+                >
+                  <AlertCircle size={13} />
+                  {errors.reason}
+                </div>
+              )}
             </div>
           </Field>
-        </div>
+        </fieldset>
 
-        {/* Row 2 — Client name + age */}
-        <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-5">
-          <Field id="clientFirstName" label="Client's first name" required error={errors.clientFirstName}>
-            <TextInput
-              id="clientFirstName"
-              value={data.clientFirstName}
-              onChange={set('clientFirstName')}
-              placeholder="First name only is fine"
-              required
-              error={!!errors.clientFirstName}
-              describedBy={errors.clientFirstName ? 'clientFirstName-error' : undefined}
-            />
+        <div
+          className="my-6"
+          style={{ borderTop: '1px solid var(--warm-stone)', opacity: 0.4 }}
+        />
+
+        {/* ── NDIS & consent ── */}
+        <fieldset className="space-y-5">
+          <legend
+            className="font-lora font-bold mb-4 block"
+            style={{ fontSize: '20px', color: 'var(--deep-ink)' }}
+          >
+            NDIS & consent
+          </legend>
+
+          <Field id="ndisStatus" label="NDIS status" required error={errors.ndisStatus}>
+            <div
+              className="flex flex-wrap gap-4"
+              role="radiogroup"
+              aria-labelledby="ndisStatus-label"
+              aria-describedby={errors.ndisStatus ? 'ndisStatus-error' : undefined}
+            >
+              <span id="ndisStatus-label" className="sr-only">NDIS status</span>
+              {ndisOptions.map(({ value, label }) => (
+                <label
+                  key={value}
+                  className="flex items-center gap-2 font-sans text-sm"
+                  style={{ color: 'var(--deep-ink)' }}
+                >
+                  <input
+                    type="radio"
+                    name="ndisStatus"
+                    value={value}
+                    checked={data.ndisStatus === value}
+                    onChange={() => set('ndisStatus')(value)}
+                    aria-required="true"
+                    className="accent-navy"
+                    style={{ accentColor: 'var(--navy)', width: '16px', height: '16px' }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {errors.ndisStatus && (
+              <div
+                role="alert"
+                id="ndisStatus-error"
+                className="flex items-center gap-1.5 font-sans mt-1"
+                style={{ fontSize: '13px', color: 'var(--warm-red)' }}
+              >
+                <AlertCircle size={13} />
+                {errors.ndisStatus}
+              </div>
+            )}
           </Field>
 
-          <Field id="clientAge" label="Age" required error={errors.clientAge}>
-            <TextInput
-              id="clientAge"
-              value={data.clientAge}
-              onChange={set('clientAge')}
-              placeholder="e.g. 9"
-              type="text"
-              inputMode="numeric"
-              required
-              error={!!errors.clientAge}
-              describedBy={errors.clientAge ? 'clientAge-error' : undefined}
-            />
+          <Field id="familyContacted" label="Has the family been contacted about this referral?" required error={errors.familyContacted}>
+            <div
+              className="flex flex-wrap gap-4"
+              role="radiogroup"
+              aria-labelledby="familyContacted-label"
+              aria-describedby={errors.familyContacted ? 'familyContacted-error' : undefined}
+            >
+              <span id="familyContacted-label" className="sr-only">Has the family been contacted about this referral?</span>
+              {['Yes', 'No'].map((label) => (
+                <label
+                  key={label}
+                  className="flex items-center gap-2 font-sans text-sm"
+                  style={{ color: 'var(--deep-ink)' }}
+                >
+                  <input
+                    type="radio"
+                    name="familyContacted"
+                    value={label.toLowerCase()}
+                    checked={data.familyContacted === label.toLowerCase()}
+                    onChange={() => set('familyContacted')(label.toLowerCase())}
+                    aria-required="true"
+                    className="accent-navy"
+                    style={{ accentColor: 'var(--navy)', width: '16px', height: '16px' }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {errors.familyContacted && (
+              <div
+                role="alert"
+                id="familyContacted-error"
+                className="flex items-center gap-1.5 font-sans mt-1"
+                style={{ fontSize: '13px', color: 'var(--warm-red)' }}
+              >
+                <AlertCircle size={13} />
+                {errors.familyContacted}
+              </div>
+            )}
           </Field>
-        </div>
 
-        {/* Reason */}
-        <Field id="reason" label="Reason for referral" required error={errors.reason}>
-          <div>
+          <Field id="notes" label="Additional notes (optional)">
             <textarea
-              id="reason"
-              name="reason"
-              value={data.reason}
-              onChange={(e) => set('reason')(e.target.value)}
-              placeholder="Brief description of the child's needs and what you're hoping OT can help with"
-              required
-              aria-required="true"
-              aria-describedby={errors.reason ? 'reason-error' : undefined}
-              aria-invalid={errors.reason ? 'true' : undefined}
-              rows={4}
+              id="notes"
+              name="notes"
+              value={data.notes}
+              onChange={(e) => set('notes')(e.target.value)}
+              placeholder="Anything else that would be helpful — school context, previous OT input, equipment already trialled, timing preferences..."
+              rows={3}
               className="w-full font-sans rounded-lg resize-y"
               style={{
                 background: 'var(--off-white)',
-                border: `1.5px solid ${errors.reason ? 'var(--warm-red)' : 'var(--warm-stone)'}`,
+                border: '1.5px solid var(--warm-stone)',
                 color: 'var(--deep-ink)',
                 fontSize: '15px',
                 lineHeight: '1.65',
                 padding: '12px 16px',
                 outline: 'none',
-                minHeight: '100px',
+                minHeight: '80px',
               }}
-              onFocus={(e) => {
-                if (!errors.reason) e.target.style.borderColor = 'var(--navy)'
-              }}
-              onBlur={(e) => {
-                if (!errors.reason) e.target.style.borderColor = 'var(--warm-stone)'
-              }}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--navy)' }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--warm-stone)' }}
             />
-            {errors.reason && (
+          </Field>
+
+          {/* Consent checkbox */}
+          <div>
+            <label
+              className="flex items-start gap-3 font-sans text-sm cursor-pointer"
+              style={{ color: 'var(--deep-ink)' }}
+            >
+              <input
+                type="checkbox"
+                checked={data.consent}
+                onChange={(e) => set('consent')(e.target.checked)}
+                aria-required="true"
+                aria-describedby={errors.consent ? 'consent-error' : undefined}
+                aria-invalid={errors.consent ? 'true' : undefined}
+                className="mt-0.5"
+                style={{ accentColor: 'var(--navy)', width: '16px', height: '16px' }}
+              />
+              <span>
+                I confirm that I have appropriate authority to share this information
+                with Assured OT, and that the family has been informed where required.
+                <span aria-hidden="true" style={{ color: 'var(--terracotta)' }}> *</span>
+              </span>
+            </label>
+            {errors.consent && (
               <div
                 role="alert"
+                id="consent-error"
                 className="flex items-center gap-1.5 font-sans mt-1"
                 style={{ fontSize: '13px', color: 'var(--warm-red)' }}
-                id="reason-error"
               >
                 <AlertCircle size={13} />
-                {errors.reason}
+                {errors.consent}
               </div>
             )}
           </div>
-        </Field>
-
-        {/* Contact details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Field id="email" label="Your email" required error={errors.email}>
-            <TextInput
-              id="email"
-              value={data.email}
-              onChange={set('email')}
-              placeholder="your@email.com"
-              type="email"
-              required
-              error={!!errors.email}
-              describedBy={errors.email ? 'email-error' : undefined}
-            />
-          </Field>
-
-          <Field id="phone" label="Your phone">
-            <TextInput
-              id="phone"
-              value={data.phone}
-              onChange={set('phone')}
-              placeholder="0400 000 000"
-              type="tel"
-            />
-          </Field>
-        </div>
-
-        {/* NDIS status */}
-        <Field id="ndisStatus" label="NDIS status" required error={errors.ndisStatus}>
-          <div
-            className="flex flex-wrap gap-4"
-            role="radiogroup"
-            aria-labelledby="ndisStatus-label"
-            aria-describedby={errors.ndisStatus ? 'ndisStatus-error' : undefined}
-          >
-            {['yes', 'no', 'unsure'].map((val) => (
-              <label
-                key={val}
-                className="flex items-center gap-2 font-sans text-sm"
-                style={{ color: 'var(--deep-ink)' }}
-              >
-                <input
-                  type="radio"
-                  name="ndisStatus"
-                  value={val}
-                  checked={data.ndisStatus === val}
-                  onChange={() => set('ndisStatus')(val)}
-                  aria-required="true"
-                  className="accent-navy"
-                  style={{ accentColor: 'var(--navy)', width: '16px', height: '16px' }}
-                />
-                {val === 'yes' ? 'NDIS participant' : val === 'no' ? 'Not on NDIS' : 'Not sure / in process'}
-              </label>
-            ))}
-          </div>
-          {errors.ndisStatus && (
-            <div
-              role="alert"
-              id="ndisStatus-error"
-              className="flex items-center gap-1.5 font-sans"
-              style={{ fontSize: '13px', color: 'var(--warm-red)' }}
-            >
-              <AlertCircle size={13} />
-              {errors.ndisStatus}
-            </div>
-          )}
-        </Field>
-
-        {/* Referral source */}
-        <Field id="referralSource" label="How did you hear about Assured OT?">
-          <div className="relative">
-            <select
-              id="referralSource"
-              name="referralSource"
-              value={data.referralSource}
-              onChange={(e) => set('referralSource')(e.target.value)}
-              className="w-full font-sans rounded-lg appearance-none"
-              style={{
-                background: 'var(--off-white)',
-                border: '1.5px solid var(--warm-stone)',
-                color: data.referralSource ? 'var(--deep-ink)' : '#999',
-                fontSize: '15px',
-                padding: '12px 40px 12px 16px',
-                outline: 'none',
-              }}
-            >
-              <option value="">Select one (optional)</option>
-              <option value="google">Google search</option>
-              <option value="referral">Referred by a colleague</option>
-              <option value="social">Social media</option>
-              <option value="ndis">NDIS provider portal</option>
-              <option value="word-of-mouth">Word of mouth</option>
-              <option value="other">Other</option>
-            </select>
-            <ChevronDown
-              size={16}
-              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: 'var(--warm-stone)' }}
-            />
-          </div>
-        </Field>
-
-        {/* Notes */}
-        <Field id="notes" label="Additional notes (optional)">
-          <textarea
-            id="notes"
-            name="notes"
-            value={data.notes}
-            onChange={(e) => set('notes')(e.target.value)}
-            placeholder="Anything else you'd like me to know before we connect"
-            rows={3}
-            className="w-full font-sans rounded-lg resize-y"
-            style={{
-              background: 'var(--off-white)',
-              border: '1.5px solid var(--warm-stone)',
-              color: 'var(--deep-ink)',
-              fontSize: '15px',
-              lineHeight: '1.65',
-              padding: '12px 16px',
-              outline: 'none',
-              minHeight: '80px',
-            }}
-            onFocus={(e) => { e.target.style.borderColor = 'var(--navy)' }}
-            onBlur={(e) => { e.target.style.borderColor = 'var(--warm-stone)' }}
-          />
-        </Field>
+        </fieldset>
 
         <p
           className="font-sans text-caption"
           style={{ color: 'var(--warm-stone)' }}
         >
           * Required fields. Information is kept confidential and used only to respond to your
-          referral. See our{' '}
-          <a href="/privacy" style={{ color: 'var(--terracotta)' }}>
-            privacy policy
-          </a>
-          .
+          referral.
         </p>
 
         <div className="pt-2">
@@ -522,41 +633,53 @@ function ReferralForm() {
   )
 }
 
-// ─── FAQ ─────────────────────────────────────────────────────────────────────
-const referralFaqs = [
+// ─── Quick reference panel ───────────────────────────────────────────────────
+const quickRef = [
   {
-    q: 'How quickly will I hear back after submitting?',
-    a: 'I aim to respond to all referrals within 2 business days. If your situation is urgent, please email directly at hello@assuredot.com.au and flag it.',
+    icon: Clock,
+    label: 'Initial response',
+    value: 'Within 24 hours',
+    sub: 'Mon–Fri, AWST',
   },
   {
-    q: 'Can parents refer directly, or do I need to go through a GP?',
-    a: 'Absolutely — parents, carers, and individuals can refer directly. No GP referral or prescription is needed.',
+    icon: FileText,
+    label: 'Report turnaround',
+    value: '10 business days',
+    sub: 'Plain English · NDIS-ready',
   },
   {
-    q: 'What happens after I submit a referral?',
-    a: "I'll review the information, reach out to confirm receipt, and suggest an initial appointment or phone consultation. You'll be in contact within 2 business days.",
+    icon: Users,
+    label: 'Ages seen',
+    value: '3 – 18',
+    sub: 'Most work happens between 6 and 14',
+  },
+  {
+    icon: MapPin,
+    label: 'Service area',
+    value: 'Perth metro + Mandurah',
+    sub: 'Home, school, clinic visits',
   },
 ]
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function ReferralPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-
   return (
     <>
-      {/* Hero split */}
+      {/* Hero */}
       <section
-        className="pt-28 pb-0"
+        className="pt-32 pb-16"
         style={{ background: 'var(--sketch-cream)' }}
         aria-label="Referral information"
       >
         <div className="container-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 pb-12">
-            {/* Left */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             <RevealOnScroll>
               <div>
-                <span className="font-caveat text-xl block mb-3" style={{ color: 'var(--terracotta)' }}>
-                  referring is simple
+                <span
+                  className="font-caveat text-xl block mb-3"
+                  style={{ color: 'var(--terracotta)' }}
+                >
+                  sending a referral?
                 </span>
                 <h1
                   className="font-lora font-bold mb-5"
@@ -567,76 +690,89 @@ export default function ReferralPage() {
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  Here's how it works.
+                  Plain answers. Same-day response.
                 </h1>
                 <p
-                  className="font-sans"
-                  style={{ fontSize: '17px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.8 }}
+                  className="font-sans mb-6"
+                  style={{
+                    fontSize: '17px',
+                    lineHeight: 1.65,
+                    color: 'var(--deep-ink)',
+                    opacity: 0.8,
+                  }}
                 >
-                  Whether you're a parent, a GP, a paediatrician, or a teacher — the process is
-                  the same: fill in the short form, and I'll take it from there.
+                  Whether you&apos;re a GP, paediatrician, school OT, speech pathologist,
+                  physiotherapist, or hospital liaison — this form is the fastest way to
+                  get a child into the queue.
                 </p>
+                <div
+                  className="inline-flex items-center gap-2 font-sans text-sm px-3 py-1.5 rounded-full"
+                  style={{
+                    background: 'var(--navy)',
+                    color: 'var(--sand-white)',
+                  }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: 'var(--terracotta)' }}
+                    aria-hidden="true"
+                  />
+                  Currently accepting referrals · next intake June 2026
+                </div>
               </div>
             </RevealOnScroll>
 
-            {/* Right — 3-step visual */}
             <RevealOnScroll delay={100}>
-              <div className="flex flex-col gap-6">
-                {[
-                  {
-                    n: '1',
-                    illus: 'puzzle' as const,
-                    title: 'Submit your referral',
-                    desc: 'Fill in the form below — takes about 3 minutes.',
-                  },
-                  {
-                    n: '2',
-                    illus: 'controller' as const,
-                    title: 'I get in touch',
-                    desc: "Within 2 business days, I'll confirm receipt and set up a call or appointment.",
-                  },
-                  {
-                    n: '3',
-                    illus: 'mountain-tree' as const,
-                    title: 'Therapy begins',
-                    desc: 'We start with your child, their goals, and what actually matters to your family.',
-                  },
-                ].map(({ n, illus, title, desc }) => (
-                  <div key={n} className="flex items-start gap-5">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-lora font-bold"
-                      style={{
-                        background: 'var(--navy)',
-                        color: 'var(--sand-white)',
-                        fontSize: '16px',
-                      }}
-                      aria-hidden="true"
-                    >
-                      {n}
+              <div
+                className="p-6 rounded-card"
+                style={{ background: 'var(--navy)' }}
+                data-dark-bg
+              >
+                <h2
+                  className="font-sans font-semibold text-sm uppercase tracking-wider mb-5"
+                  style={{ color: 'var(--warm-stone)' }}
+                >
+                  Quick reference
+                </h2>
+                <div className="space-y-4">
+                  {quickRef.map(({ icon: Icon, label, value, sub }) => (
+                    <div key={label} className="flex items-start gap-3">
+                      <Icon
+                        size={16}
+                        className="flex-shrink-0 mt-1"
+                        style={{ color: 'var(--terracotta)' }}
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <p
+                          className="font-sans text-xs uppercase tracking-wider"
+                          style={{ color: 'var(--warm-stone)' }}
+                        >
+                          {label}
+                        </p>
+                        <p
+                          className="font-sans font-medium"
+                          style={{ color: 'var(--sand-white)', fontSize: '15px' }}
+                        >
+                          {value}
+                        </p>
+                        <p
+                          className="font-sans text-xs"
+                          style={{ color: 'var(--sand)', opacity: 0.7 }}
+                        >
+                          {sub}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 pt-1">
-                      <h3
-                        className="font-sans font-semibold mb-1"
-                        style={{ fontSize: '16px', color: 'var(--deep-ink)' }}
-                      >
-                        {title}
-                      </h3>
-                      <p
-                        className="font-sans text-sm"
-                        style={{ lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.7 }}
-                      >
-                        {desc}
-                      </p>
-                    </div>
-                    <SpotIllustration type={illus} size={36} className="hidden sm:block flex-shrink-0" />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </RevealOnScroll>
           </div>
         </div>
-        <MountainDivider opacity={0.25} />
       </section>
+
+      <MountainDivider opacity={0.25} />
 
       {/* Form section */}
       <section
@@ -670,166 +806,55 @@ export default function ReferralPage() {
 
       <MountainDivider />
 
-      {/* What happens next */}
+      {/* CTA */}
       <section
-        className="section-pad"
-        style={{ background: 'var(--navy)' }}
-        aria-label="What happens after you refer"
-        data-dark-bg
+        className="section-pad text-center"
+        style={{ background: 'var(--sand)' }}
+        aria-label="Get in touch"
       >
-        <div className="container-content max-w-[860px] mx-auto">
+        <div className="container-content max-w-[580px] mx-auto">
           <RevealOnScroll>
             <h2
-              className="font-lora font-bold mb-10 text-center"
-              style={{ fontSize: '32px', color: 'var(--sand-white)' }}
+              className="font-lora font-bold mb-4"
+              style={{ fontSize: '36px', color: 'var(--deep-ink)' }}
             >
-              What happens next
+              Rather talk it through first?
             </h2>
-          </RevealOnScroll>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Within 2 business days',
-                desc: 'I review the referral and get in touch to confirm receipt and discuss next steps.',
-              },
-              {
-                title: 'Initial consultation',
-                desc: 'A phone or video call to learn more about your child, their goals, and what matters to your family.',
-              },
-              {
-                title: 'First appointment',
-                desc: 'Typically within 2–3 weeks. We start building a picture of your child and what we\'ll work toward together.',
-              },
-            ].map(({ title, desc }, i) => (
-              <RevealOnScroll key={title} delay={i * 80}>
-                <div className="text-center">
-                  <div
-                    className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center font-lora font-bold text-xl"
-                    style={{ background: 'rgba(240,232,216,0.1)', color: 'var(--terracotta)' }}
-                    aria-hidden="true"
-                  >
-                    {i + 1}
-                  </div>
-                  <h3
-                    className="font-sans font-semibold mb-2"
-                    style={{ fontSize: '16px', color: 'var(--sand-white)' }}
-                  >
-                    {title}
-                  </h3>
-                  <p
-                    className="font-sans text-sm"
-                    style={{ lineHeight: 1.65, color: 'var(--sand)', opacity: 0.8 }}
-                  >
-                    {desc}
-                  </p>
-                </div>
-              </RevealOnScroll>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <MountainDivider flipped />
-
-      {/* FAQ */}
-      <section
-        className="section-pad"
-        style={{ background: 'var(--off-white)' }}
-        aria-label="Referral frequently asked questions"
-      >
-        <div className="container-content max-w-[680px] mx-auto">
-          <RevealOnScroll>
-            <h2
-              className="font-lora font-bold mb-8"
-              style={{ fontSize: '28px', color: 'var(--deep-ink)' }}
+            <p
+              className="font-sans mb-8"
+              style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.75 }}
             >
-              Common referral questions
-            </h2>
-          </RevealOnScroll>
-
-          <div>
-            {referralFaqs.map(({ q, a }, i) => (
-              <RevealOnScroll key={q} delay={i * 50}>
-                <div
-                  className="border-b"
-                  style={{ borderColor: 'var(--warm-stone)' }}
-                >
-                  <button
-                    className="w-full flex justify-between items-start gap-4 py-5 text-left"
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    aria-expanded={openFaq === i}
-                    aria-controls={`rfaq-${i}`}
-                    id={`rfaq-btn-${i}`}
-                  >
-                    <span
-                      className="font-sans font-medium text-sm"
-                      style={{ color: 'var(--deep-ink)' }}
-                    >
-                      {q}
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      className="flex-shrink-0 mt-0.5"
-                      style={{
-                        color: 'var(--terracotta)',
-                        transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)',
-                        transition: 'transform 300ms ease',
-                      }}
-                    />
-                  </button>
-                  <div
-                    id={`rfaq-${i}`}
-                    role="region"
-                    aria-labelledby={`rfaq-btn-${i}`}
-                    className={`accordion-content ${openFaq === i ? 'open' : ''}`}
-                  >
-                    <p
-                      className="font-sans text-sm pb-5"
-                      style={{ lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.75 }}
-                    >
-                      {a}
-                    </p>
-                  </div>
-                </div>
-              </RevealOnScroll>
-            ))}
-          </div>
-
-          {/* Alternative contact */}
-          <RevealOnScroll delay={200}>
-            <div
-              className="mt-10 p-6 rounded-card"
-              style={{ background: 'var(--sketch-cream)', border: '1px solid var(--warm-stone)' }}
-            >
-              <p
-                className="font-sans font-medium mb-4"
-                style={{ fontSize: '15px', color: 'var(--deep-ink)' }}
+              If this referral is complex, urgent, or you just want to check whether
+              I&apos;m the right fit before sending the form — call or email. I reply same day.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a
+                href="tel:0865550142"
+                className="btn-arrow inline-flex items-center font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200"
+                style={{
+                  background: 'var(--navy)',
+                  color: 'var(--sand-white)',
+                  fontSize: '15px',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--terracotta)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--navy)' }}
               >
-                Prefer to get in touch directly?
-              </p>
-              <div className="flex flex-wrap gap-6">
-                <a
-                  href="mailto:hello@assuredot.com.au"
-                  className="flex items-center gap-2 font-sans text-sm transition-colors duration-200"
-                  style={{ color: 'var(--navy)' }}
-                  onMouseEnter={(e) => { ;(e.currentTarget as HTMLElement).style.color = 'var(--terracotta)' }}
-                  onMouseLeave={(e) => { ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)' }}
-                >
-                  <Mail size={15} />
-                  hello@assuredot.com.au
-                </a>
-                <a
-                  href="tel:+61400000000"
-                  className="flex items-center gap-2 font-sans text-sm transition-colors duration-200"
-                  style={{ color: 'var(--navy)' }}
-                  onMouseEnter={(e) => { ;(e.currentTarget as HTMLElement).style.color = 'var(--terracotta)' }}
-                  onMouseLeave={(e) => { ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)' }}
-                >
-                  <Phone size={15} />
-                  0400 000 000
-                </a>
-              </div>
+                Call (08) 6555 0142 <span aria-hidden="true">→</span>
+              </a>
+              <a
+                href="mailto:hello@assuredot.com.au"
+                className="btn-arrow inline-flex items-center font-sans font-medium px-6 py-3 rounded-btn border-2 transition-all duration-200"
+                style={{
+                  borderColor: 'var(--navy)',
+                  color: 'var(--navy)',
+                  background: 'transparent',
+                  fontSize: '15px',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--navy)'; (e.currentTarget as HTMLElement).style.color = 'var(--sand-white)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--navy)' }}
+              >
+                Email Jeimer <span aria-hidden="true">→</span>
+              </a>
             </div>
           </RevealOnScroll>
         </div>

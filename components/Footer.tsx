@@ -11,7 +11,7 @@ const practiceLinks = [
 ]
 
 const partnerLinks = [
-  { href: '#', label: 'Referral form (PDF)' },
+  { href: '/referral', label: 'Referral form' },
   { href: '#', label: 'NDIS service agreement' },
   { href: '#', label: 'Report samples' },
 ]
@@ -105,7 +105,10 @@ export default function Footer() {
           </svg>
         </span>
 
-        <span className="right">ABN 00 000 000 000 · AHPRA registered</span>
+        <span className="right">
+          <a href="/accessibility" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Accessibility</a>
+          {' · '}ABN 00 000 000 000 · AHPRA registered
+        </span>
       </div>
     </footer>
   )
