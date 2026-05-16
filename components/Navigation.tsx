@@ -5,18 +5,22 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 
+const SECTIONS = ['about', 'services', 'stories', 'practitioners', 'contact']
+
 const NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About' },
-  { href: '/services', label: 'Services' },
-  { href: '/referral', label: 'Referrals' },
-  { href: '/contact', label: 'Contact' },
+  { num: '01', label: 'About Jeimer', hash: 'about', href: '/about' },
+  { num: '02', label: 'Services', hash: 'services', href: '/services' },
+  { num: '03', label: 'Stories', hash: 'stories', href: '/#stories' },
+  { num: '04', label: 'For Practitioners', hash: 'practitioners', href: '/referral' },
+  { num: '05', label: 'Contact', hash: 'contact', href: '/contact' },
 ]
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('')
   const pathname = usePathname()
+  const isHome = pathname === '/'
 
   const handleScroll = useCallback(() => {
     setScrolled(window.scrollY > 80)
@@ -27,191 +31,141 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
-  // Close menu on route change
   useEffect(() => {
     setMenuOpen(false)
   }, [pathname])
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href)
+  // Track active section on homepage only
+  useEffect(() => {
+    if (!isHome) return
+    const observers: IntersectionObserver[] = []
+    SECTIONS.forEach((id) => {
+      const el = document.getElementById(id)
+      if (!el) return
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id) },
+        { rootMargin: '-40% 0px -55% 0px' }
+      )
+      obs.observe(el)
+      observers.push(obs)
+    })
+    return () => observers.forEach((o) => o.disconnect())
+  }, [isHome])
+
+  const linkHref = (item: typeof NAV_LINKS[0]) =>
+    isHome ? `#${item.hash}` : item.href
+
+  const isActive = (item: typeof NAV_LINKS[0]) =>
+    isHome ? activeSection === item.hash : pathname.startsWith(item.href)
 
   return (
     <>
       <header
         role="banner"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'nav-scrolled shadow-nav' : 'bg-transparent'
-        }`}
+        className={`hp-nav${scrolled ? ' is-stuck' : ''}`}
+        id="hp-nav"
       >
-        <div className="container-content">
-          <nav
-            role="navigation"
-            aria-label="Main navigation"
-            className="flex items-center justify-between h-16 md:h-20"
+        {/* Brand */}
+        <Link href="/" aria-label="Assured OT — go to homepage" className="hp-brand">
+          <span className="hp-brand-mark" aria-hidden="true">
+            <svg width="28" height="32" viewBox="0 0 28 32" fill="none">
+              <path
+                d="M14 2 L18 10 L16 10 L20 18 L17 18 L21 26 L7 26 L11 18 L8 18 L12 10 L10 10 Z"
+                fill="none"
+                stroke="var(--terracotta)"
+                strokeWidth="1.4"
+                strokeLinejoin="round"
+              />
+              <line x1="14" y1="26" x2="14" y2="30" stroke="var(--terracotta)" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span className="hp-brand-stack">
+            <span className="hp-brand-word">Assured <em>OT</em></span>
+            <span className="hp-brand-sub">Paediatric · Perth</span>
+          </span>
+        </Link>
+
+        {/* Desktop nav links */}
+        <ul className="hp-nav-links" role="list">
+          {NAV_LINKS.map((item) => (
+            <li key={item.hash}>
+              <a
+                href={linkHref(item)}
+                className={isActive(item) ? 'is-active' : ''}
+              >
+                <span className="num">{item.num}</span>
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {/* Right side */}
+        <div className="hp-nav-right">
+          <a className="hp-nav-phone" href="tel:0865550142">
+            <span className="dot" aria-hidden="true" />
+            (08) 6555 0142
+          </a>
+          <a className="hp-btn" href={isHome ? '#contact' : '/contact'}>
+            Book a chat
+          </a>
+
+          {/* Mobile hamburger — visible < 820px */}
+          <button
+            className="hp-hamburger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           >
-            {/* Logo */}
-            <Link
-              href="/"
-              aria-label="Assured OT — go to homepage"
-              className="flex items-center gap-3 group"
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: 'var(--navy)' }}
-              >
-                {/* Mountain badge SVG */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M2 18L7 9L11 14L14 10L22 18H2Z"
-                    stroke="#F0E8D8"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M16 6L18 3L20 6"
-                    stroke="#C4724A"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-              </div>
-              <div className="leading-tight">
-                <span
-                  className="block font-lora font-bold text-base"
-                  style={{ color: 'var(--navy)', letterSpacing: '-0.01em' }}
-                >
-                  Assured OT
-                </span>
-                <span
-                  className="block font-caveat text-xs"
-                  style={{ color: 'var(--terracotta)' }}
-                >
-                  Perth, WA
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-8">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`nav-link font-sans text-sm font-medium transition-colors duration-200 ${
-                    isActive(href)
-                      ? 'active'
-                      : ''
-                  }`}
-                  style={{ color: 'var(--deep-ink)' }}
-                  aria-current={isActive(href) ? 'page' : undefined}
-                >
-                  {label}
-                </Link>
-              ))}
-
-              <Link
-                href="/referral"
-                className={`btn-arrow font-sans text-sm font-medium px-5 py-2.5 rounded-btn border-2 transition-all duration-200 ${
-                  scrolled
-                    ? 'bg-navy text-sand-white border-navy hover:bg-terracotta hover:border-terracotta'
-                    : 'bg-transparent border-navy text-navy hover:bg-navy hover:text-sand-white'
-                }`}
-                style={
-                  scrolled
-                    ? { background: 'var(--navy)', color: 'var(--sand-white)', borderColor: 'var(--navy)' }
-                    : { background: 'transparent', color: 'var(--navy)', borderColor: 'var(--navy)' }
-                }
-              >
-                Make a referral
-                <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-
-            {/* Mobile hamburger */}
-            <button
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-btn"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-expanded={menuOpen}
-              aria-controls="mobile-menu"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              style={{ color: 'var(--navy)' }}
-            >
-              {menuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </nav>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </header>
 
-      {/* Mobile overlay menu */}
+      {/* Mobile overlay */}
       <div
         id="mobile-menu"
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed inset-0 z-40 flex flex-col transition-all duration-300 md:hidden ${
-          menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        style={{ background: 'var(--navy)' }}
-        data-dark-bg
+        className={`hp-mobile-menu${menuOpen ? ' is-open' : ''}`}
       >
-        <div className="container-content pt-20 pb-8 flex-1 flex flex-col justify-center">
-          <nav aria-label="Mobile navigation" className="space-y-2">
-            {NAV_LINKS.map(({ href, label }, i) => (
-              <Link
-                key={href}
-                href={href}
-                className={`block font-lora font-bold text-4xl py-3 transition-all duration-200 ${
-                  menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                }`}
-                style={{
-                  color: isActive(href) ? 'var(--terracotta)' : 'var(--sand-white)',
-                  transitionDelay: menuOpen ? `${i * 60}ms` : '0ms',
-                }}
-                aria-current={isActive(href) ? 'page' : undefined}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <div
-            className={`mt-10 transition-all duration-300 ${
-              menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`}
-            style={{ transitionDelay: menuOpen ? '360ms' : '0ms' }}
-          >
-            <Link
-              href="/referral"
-              className="btn-arrow inline-flex font-sans text-base font-medium px-6 py-3 rounded-btn"
-              style={{
-                background: 'var(--terracotta)',
-                color: 'white',
-              }}
+        <nav aria-label="Mobile navigation" className="hp-mobile-links">
+          {NAV_LINKS.map((item, i) => (
+            <a
+              key={item.hash}
+              href={linkHref(item)}
+              onClick={() => setMenuOpen(false)}
+              style={{ transitionDelay: menuOpen ? `${i * 55}ms` : '0ms' }}
+              className={isActive(item) ? 'is-active' : ''}
             >
-              Make a referral <span aria-hidden="true">→</span>
-            </Link>
+              <span className="num">{item.num}</span>
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-            <div className="mt-8 pt-8 border-t" style={{ borderColor: 'rgba(201,187,168,0.3)' }}>
-              <p className="font-caveat text-lg" style={{ color: 'var(--sand)' }}>
-                Based in Perth, WA
-              </p>
-              <a
-                href="mailto:hello@assuredot.com.au"
-                className="block mt-1 font-sans text-sm"
-                style={{ color: 'var(--warm-stone)' }}
-              >
-                hello@assuredot.com.au
-              </a>
-            </div>
-          </div>
+        <div
+          className="hp-mobile-foot"
+          style={{ transitionDelay: menuOpen ? '330ms' : '0ms' }}
+        >
+          <a
+            className="hp-btn"
+            href={isHome ? '#contact' : '/contact'}
+            onClick={() => setMenuOpen(false)}
+          >
+            Book a chat
+          </a>
+          <p className="hp-mobile-contact">
+            <a href="tel:0865550142">(08) 6555 0142</a>
+            <a href="mailto:hello@assuredot.com.au">hello@assuredot.com.au</a>
+          </p>
         </div>
       </div>
     </>

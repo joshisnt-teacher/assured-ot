@@ -1,878 +1,556 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import MountainDivider from '@/components/MountainDivider'
-import RevealOnScroll from '@/components/RevealOnScroll'
-import SpotIllustration from '@/components/SpotIllustration'
-import { ChevronDown, Shield, MapPin, Clock, ChevronRight } from 'lucide-react'
 
-// ─── Hero Illustration ──────────────────────────────────────────────────────
-function HeroIllustration() {
-  return (
-    <div
-      className="absolute inset-0 w-full h-full overflow-hidden grain-overlay"
-      style={{ background: 'var(--sketch-cream)' }}
-      aria-hidden="true"
-    >
-      <svg
-        viewBox="0 0 600 700"
-        className="absolute inset-0 w-full h-full"
-        preserveAspectRatio="xMidYMid slice"
-        fill="none"
-      >
-        {/* Background mountain range — large */}
-        <path
-          d="M-50,500 C50,450 120,200 220,220 C280,232 310,360 380,350 C450,340 480,160 580,140 C650,128 700,250 750,240 L750,700 L-50,700 Z"
-          stroke="var(--navy)"
-          strokeWidth="1"
-          fill="none"
-          opacity="0.18"
-        />
-        {/* Mid mountain */}
-        <path
-          d="M-50,580 C80,540 160,350 280,340 C360,333 400,450 490,440 C560,432 600,320 680,310 L680,700 L-50,700 Z"
-          stroke="var(--navy)"
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.25"
-        />
-        {/* Hatching — peaks */}
-        <path d="M220,220 L210,270 M220,220 L228,265" stroke="var(--navy)" strokeWidth="0.8" opacity="0.12" />
-        <path d="M580,140 L570,200 M580,140 L590,195" stroke="var(--navy)" strokeWidth="0.8" opacity="0.12" />
-        {/* Pine trees */}
-        <path d="M80,520 L80,480 M70,500 L80,460 L90,500 M65,515 L80,470 L95,515" stroke="var(--navy)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
-        <path d="M150,540 L150,505 M141,520 L150,488 L159,520 M137,535 L150,495 L163,535" stroke="var(--navy)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
-        <path d="M420,460 L420,428 M412,443 L420,415 L428,443 M409,457 L420,422 L431,457" stroke="var(--navy)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.28" />
-        <path d="M490,440 L490,408 M482,424 L490,395 L498,424 M479,438 L490,402 L501,438" stroke="var(--navy)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.28" />
-        {/* Cross-hatching texture */}
-        <line x1="0" y1="600" x2="80" y2="530" stroke="var(--navy)" strokeWidth="0.5" opacity="0.06" />
-        <line x1="20" y1="620" x2="100" y2="550" stroke="var(--navy)" strokeWidth="0.5" opacity="0.06" />
-        <line x1="40" y1="640" x2="120" y2="570" stroke="var(--navy)" strokeWidth="0.5" opacity="0.06" />
-        {/* Decorative circle / sun */}
-        <circle cx="480" cy="80" r="45" stroke="var(--navy)" strokeWidth="0.8" opacity="0.12" />
-        <circle cx="480" cy="80" r="35" stroke="var(--navy)" strokeWidth="0.5" opacity="0.08" />
-        {/* Dotted texture */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <circle
-            key={i}
-            cx={50 + (i % 5) * 120 + Math.sin(i * 2.3) * 30}
-            cy={300 + Math.floor(i / 5) * 80 + Math.cos(i * 1.7) * 25}
-            r="1.2"
-            fill="var(--navy)"
-            opacity="0.1"
-          />
-        ))}
-      </svg>
-
-      {/* Editorial photo placeholder */}
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 rounded-t-[160px] overflow-hidden"
-        style={{
-          height: '72%',
-          background: 'linear-gradient(180deg, rgba(201,187,168,0.3) 0%, rgba(201,187,168,0.6) 100%)',
-          border: '1px solid rgba(201,187,168,0.5)',
-        }}
-      >
-        {/* Photo placeholder — replace with actual image */}
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="text-center" style={{ color: 'var(--warm-stone)' }}>
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto mb-3" aria-hidden="true">
-              <path d="M8 48L20 28L32 38L42 24L56 48H8Z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round" />
-              <circle cx="20" cy="18" r="6" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-            <p className="font-caveat text-base opacity-60">Your photo here</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Hero Section ───────────────────────────────────────────────────────────
-function HeroSection() {
-  const words = ['Therapy', 'that', 'plays', 'by', 'their', 'rules.']
-  const [mounted, setMounted] = useState(false)
+export default function HomePage() {
+  const frameRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 100)
-    return () => clearTimeout(t)
+    const frame = frameRef.current
+    if (!frame) return
+    const onMove = (e: MouseEvent) => {
+      const rect = frame.getBoundingClientRect()
+      const dx = (e.clientX - (rect.left + rect.width / 2)) / window.innerWidth
+      const dy = (e.clientY - (rect.top + rect.height / 2)) / window.innerHeight
+      frame.style.transform = `translate(${dx * 6}px, ${dy * 6}px)`
+    }
+    document.addEventListener('mousemove', onMove)
+    return () => document.removeEventListener('mousemove', onMove)
   }, [])
 
   return (
-    <section
-      className="relative min-h-screen flex items-center overflow-hidden"
-      style={{ background: 'var(--off-white)' }}
-      aria-label="Hero"
-    >
-      <div className="container-content w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-0 min-h-screen items-center">
-          {/* Left — content */}
-          <div className="py-32 pr-0 lg:pr-16">
-            {/* Caveat annotation */}
-            <div
-              className="inline-flex items-center gap-2 mb-8"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transition: 'opacity 400ms ease-out 800ms',
-              }}
-            >
-              <span
-                className="font-caveat text-lg"
-                style={{ color: 'var(--terracotta)' }}
-              >
-                made in Perth, WA
-              </span>
-              <span style={{ color: 'var(--warm-stone)' }}>·</span>
-              <span
-                className="font-sans text-sm font-medium"
-                style={{ color: 'var(--warm-stone)' }}
-              >
-                NDIS registered
-              </span>
-            </div>
+    <>
+      {/* ══════════ HERO ══════════ */}
+      <section className="hp-hero" id="hero">
+        <div className="hp-chrome-top">
+          <span>Est. 2018<span className="hp-eyebrow-dot"></span>NDIS Registered</span>
+          <span>Perth, Western Australia<span className="hp-eyebrow-dot"></span>Paediatric OT</span>
+        </div>
 
-            {/* Hero headline — stagger-fade-up */}
-            <h1 className="font-lora font-bold mb-6" style={{ fontSize: 'clamp(44px,5.5vw,72px)', lineHeight: 1.08, letterSpacing: '-0.02em', color: 'var(--deep-ink)' }}>
-              {words.map((word, i) => (
-                <span
-                  key={i}
-                  className="inline-block mr-[0.25em]"
-                  style={{
-                    opacity: mounted ? 1 : 0,
-                    transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `opacity 400ms ease-out ${150 + i * 60}ms, transform 400ms ease-out ${150 + i * 60}ms`,
-                  }}
-                >
-                  {i === words.length - 1 ? (
-                    <em style={{ fontStyle: 'italic', color: 'var(--terracotta)' }}>{word}</em>
-                  ) : (
-                    word
-                  )}
-                </span>
-              ))}
+        <div className="hp-hero-grid">
+          {/* LEFT */}
+          <div className="hp-hero-left">
+            <div className="hp-eyebrow">A practice of one — Jeimer Carter</div>
+
+            <h1 className="hp-headline">
+              Therapy that{' '}
+              <span className="plays">
+                plays
+                <svg className="scribble" viewBox="0 0 200 16" preserveAspectRatio="none" fill="none" stroke="#C4724A" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M2 9 Q 30 2 60 7 T 120 6 T 198 5" />
+                </svg>
+              </span>
+              <br />
+              by <span className="their">their</span> rules.
             </h1>
 
-            {/* Subhead */}
-            <p
-              className="font-sans mb-10 max-w-[460px]"
-              style={{
-                fontSize: '18px',
-                lineHeight: 1.65,
-                color: 'var(--deep-ink)',
-                opacity: mounted ? 0.75 : 0,
-                transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                transition: 'opacity 400ms ease-out 560ms, transform 400ms ease-out 560ms',
-              }}
-            >
-              Occupational therapy built around your child — not a textbook. Jeimer works with
-              kids with physical disabilities to unlock access, joy, and real independence.
+            <span className="hp-caveat-note">
+              <span style={{ display: 'inline-block', transform: 'rotate(8deg)', marginRight: '4px' }}>↳</span>
+              {' '}joy is the goal.
+            </span>
+
+            <p className="hp-lede">
+              Paediatric occupational therapy for kids who don&apos;t fit the standard kit.{' '}
+              <strong>Adaptive gaming setups, switch access, mounted controllers</strong> — and eight
+              years of figuring out what a child actually wants to do, then finding the way in.
             </p>
 
-            {/* CTAs */}
-            <div
-              className="flex flex-wrap gap-4"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                transition: 'opacity 400ms ease-out 710ms, transform 400ms ease-out 710ms',
-              }}
-            >
-              <Link
-                href="/referral"
-                className="btn-arrow inline-flex items-center font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200"
-                style={{
-                  background: 'var(--navy)',
-                  color: 'var(--sand-white)',
-                  fontSize: '15px',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--terracotta)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--navy)'
-                }}
-              >
-                See what's possible <span aria-hidden="true">→</span>
+            <div className="hp-cta-row">
+              <Link href="#contact" className="hp-btn">
+                Book a chat with Jeimer
+                <span className="hp-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 6 H 14" /><path d="M9 1.5 L 14 6 L 9 10.5" />
+                  </svg>
+                </span>
               </Link>
-              <Link
-                href="/referral"
-                className="btn-arrow inline-flex items-center font-sans font-medium px-6 py-3 rounded-btn border-2 transition-all duration-200"
-                style={{
-                  background: 'transparent',
-                  borderColor: 'var(--navy)',
-                  color: 'var(--navy)',
-                  fontSize: '15px',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--navy)'
-                  ;(e.currentTarget as HTMLElement).style.color = 'var(--sand-white)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                  ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)'
-                }}
-              >
-                Make a referral <span aria-hidden="true">→</span>
-              </Link>
+              <Link href="#practitioners" className="hp-btn hp-btn--ghost">For referring practitioners</Link>
+              <span className="meta">Usually replies same day</span>
             </div>
 
-            {/* Scroll hint */}
-            <div
-              className="mt-16 flex items-center gap-2"
-              style={{
-                opacity: mounted ? 0.4 : 0,
-                transition: 'opacity 400ms ease-out 1200ms',
-              }}
-            >
-              <ChevronDown size={16} style={{ color: 'var(--navy)' }} />
-              <span className="font-sans text-caption" style={{ color: 'var(--navy)' }}>
-                Scroll to explore
-              </span>
+            <div className="hp-trust">
+              <span className="pill"><span className="badge">N</span>NDIS Registered Provider</span>
+              <span className="pill"><em>8+</em> years paediatric OT</span>
+              <span className="pill"><em>120+</em> families supported</span>
             </div>
           </div>
 
-          {/* Right — illustration panel */}
-          <div
-            className="hidden lg:block relative h-screen"
-            style={{
-              opacity: mounted ? 1 : 0,
-              transform: mounted ? 'translateX(0)' : 'translateX(30px)',
-              transition: 'opacity 500ms ease-out 300ms, transform 500ms ease-out 300ms',
-            }}
-          >
-            <HeroIllustration />
+          {/* RIGHT */}
+          <div className="hp-hero-right">
+            <div className="hp-frame-wrap" ref={frameRef}>
+              <div className="hp-frame-offset" aria-hidden="true"></div>
+              <div className="hp-frame">
+                <div className="hp-frame-photo" aria-hidden="true"></div>
+
+                <svg className="hp-frame-silhouette" viewBox="0 0 400 500" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                  <g fill="none" stroke="#1E2D40" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M0 380 Q 100 372 200 376 T 400 372" strokeOpacity="0.35" />
+                    <circle cx="170" cy="410" r="46" />
+                    <circle cx="170" cy="410" r="18" strokeOpacity="0.6" />
+                    <g strokeOpacity="0.5" strokeWidth="1.1">
+                      <line x1="170" y1="364" x2="170" y2="456" /><line x1="124" y1="410" x2="216" y2="410" />
+                      <line x1="138" y1="378" x2="202" y2="442" /><line x1="202" y1="378" x2="138" y2="442" />
+                    </g>
+                    <circle cx="252" cy="430" r="22" /><line x1="230" y1="430" x2="274" y2="430" strokeOpacity="0.5" />
+                    <path d="M124 410 L 124 320 L 232 310 L 252 430" />
+                    <path d="M124 320 L 124 280 L 152 280" />
+                    <path d="M232 430 L 252 430" /><path d="M232 410 L 245 430" />
+                    <path d="M132 320 Q 180 314 232 312" />
+                    <path d="M156 310 Q 160 270 170 250 Q 180 230 200 232 Q 220 234 224 258 Q 226 278 222 310" />
+                    <circle cx="200" cy="208" r="26" />
+                    <path d="M180 192 Q 188 180 198 184" /><path d="M204 184 Q 214 180 220 192" />
+                    <path d="M170 260 Q 158 280 168 296 Q 178 300 186 296" />
+                    <path d="M222 260 Q 234 278 224 294 Q 214 298 206 296" />
+                    <rect x="178" y="288" width="36" height="16" rx="6" />
+                    <circle cx="186" cy="296" r="2" fill="#1E2D40" /><circle cx="206" cy="296" r="2" fill="#1E2D40" />
+                    <path d="M180 312 L 192 380 L 210 420" /><path d="M212 312 L 224 380 L 240 420" />
+                    <g stroke="#C4724A" strokeWidth="1.6" strokeOpacity="0.9">
+                      <path d="M168 170 L 162 158" /><path d="M200 158 L 200 142" /><path d="M232 170 L 240 158" />
+                    </g>
+                  </g>
+                </svg>
+
+                <svg className="hp-corner tl" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"><path d="M2 12 L 2 2 L 12 2" /></svg>
+                <svg className="hp-corner tr" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"><path d="M2 12 L 2 2 L 12 2" /></svg>
+                <svg className="hp-corner bl" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"><path d="M2 12 L 2 2 L 12 2" /></svg>
+                <svg className="hp-corner br" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"><path d="M2 12 L 2 2 L 12 2" /></svg>
+
+                <div className="hp-frame-caption">
+                  <div className="who">
+                    Lucas, 8
+                    <small>Switch · Adaptive controller</small>
+                  </div>
+                  <div className="roll">Roll 02<br />Frame 14</div>
+                </div>
+              </div>
+
+              <div className="hp-stamp" aria-hidden="true">
+                <svg viewBox="0 0 110 110" width="110" height="110">
+                  <defs>
+                    <path id="stampPath" d="M 55,55 m -42,0 a 42,42 0 1,1 84,0 a 42,42 0 1,1 -84,0" />
+                  </defs>
+                  <text fontFamily="DM Sans" fontSize="8.6" letterSpacing="3.2" fill="#1E2D40">
+                    <textPath href="#stampPath" startOffset="0">
+                      JOY IS THE GOAL · JOY IS THE GOAL · JOY IS THE GOAL ·
+                    </textPath>
+                  </text>
+                </svg>
+                <div className="inner">since<br />2018<span>Perth · WA</span></div>
+              </div>
+
+              <div className="hp-note" aria-hidden="true">
+                <p>&ldquo;He&apos;s never sat still for therapy. He sat still for this.&rdquo;</p>
+                <span className="sig">— Mira, mum of Eli, 6</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
-  )
-}
 
-// ─── Social proof bar ───────────────────────────────────────────────────────
-function SocialProofBar() {
-  const items = [
-    { Icon: Shield, text: 'NDIS registered provider' },
-    { Icon: MapPin, text: 'Based in Perth, WA' },
-    { Icon: Clock, text: '8+ years of paediatric OT' },
-    {
-      Icon: () => (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M8 1L10 6H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6H6Z" fill="currentColor" />
-        </svg>
-      ),
-      text: 'Specialist paediatric focus',
-    },
-  ]
+        {/* Bottom chrome */}
+        <div className="hp-hero-bottom">
+          <div className="left">Folio 01 / 06 — Welcome</div>
+          <div className="center">
+            <span className="scroll-ring" aria-hidden="true">
+              <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 4 L 6 8 L 10 4" />
+              </svg>
+            </span>
+            <span>scroll, gently</span>
+          </div>
+          <div className="right">↖ Crawley, Perth WA · 6009</div>
+        </div>
 
-  return (
-    <RevealOnScroll>
-      <section
-        className="py-6 border-y"
-        style={{
-          background: 'var(--navy)',
-          borderColor: 'rgba(201,187,168,0.2)',
-        }}
-        aria-label="About Assured OT"
-        data-dark-bg
-      >
-        <div className="container-content">
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
-            {items.map(({ Icon, text }) => (
-              <div
-                key={text}
-                className="flex items-center gap-2.5 font-sans text-sm font-medium"
-                style={{ color: 'var(--sand-white)' }}
-              >
-                <span style={{ color: 'var(--terracotta)' }}>
-                  <Icon size={16} />
-                </span>
-                {text}
+        {/* Mountain motif */}
+        <div className="hp-mountains" aria-hidden="true">
+          <svg viewBox="0 0 1600 280" preserveAspectRatio="xMidYMax slice">
+            <g fill="none" stroke="#1E2D40" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M -20 200 Q 90 178 160 188 T 320 172 T 480 184 T 640 168 T 800 178 T 960 162 T 1120 174 T 1280 160 T 1440 170 T 1620 162" strokeWidth="1" strokeOpacity="0.35" />
+              <path d="M -20 230 L 80 178 L 130 198 L 200 140 L 260 196 L 340 172 L 410 220 L 490 178 L 560 215 L 640 195" strokeWidth="1.4" />
+              <g strokeWidth="0.9" strokeOpacity="0.55">
+                <line x1="207" y1="160" x2="220" y2="180" /><line x1="212" y1="158" x2="232" y2="186" />
+                <line x1="218" y1="156" x2="244" y2="190" /><line x1="226" y1="156" x2="252" y2="192" />
+                <line x1="234" y1="158" x2="256" y2="186" />
+              </g>
+              <path d="M 640 195 L 720 220 L 790 150 L 870 200 L 950 90 L 1040 200 L 1110 135 L 1190 210 L 1270 170 L 1370 230 L 1450 195 L 1620 220" strokeWidth="1.5" />
+              <g strokeWidth="0.9" strokeOpacity="0.5">
+                <line x1="956" y1="110" x2="980" y2="140" /><line x1="962" y1="106" x2="996" y2="150" />
+                <line x1="970" y1="106" x2="1014" y2="158" /><line x1="980" y1="108" x2="1028" y2="166" />
+                <line x1="992" y1="112" x2="1034" y2="172" /><line x1="1004" y1="118" x2="1036" y2="178" />
+              </g>
+              <g strokeWidth="0.8" strokeOpacity="0.45">
+                <line x1="1115" y1="148" x2="1130" y2="172" /><line x1="1122" y1="148" x2="1142" y2="178" /><line x1="1130" y1="150" x2="1156" y2="186" />
+              </g>
+              <path d="M -20 252 Q 200 234 380 244 T 760 240 T 1140 238 T 1500 244 T 1620 240" strokeWidth="1.3" />
+              <g strokeWidth="1.2">
+                <g transform="translate(280 248)"><path d="M0 0 L 0 -8" /><path d="M-9 -8 L 0 -22 L 9 -8 Z M -7 -16 L 0 -28 L 7 -16 Z M -5 -22 L 0 -34 L 5 -22 Z" /></g>
+                <g transform="translate(310 250)"><path d="M0 0 L 0 -6" /><path d="M-7 -6 L 0 -18 L 7 -6 Z M -5 -14 L 0 -24 L 5 -14 Z" /></g>
+                <g transform="translate(338 246)"><path d="M0 0 L 0 -10" /><path d="M-11 -10 L 0 -28 L 11 -10 Z M -8 -20 L 0 -34 L 8 -20 Z M -6 -28 L 0 -42 L 6 -28 Z" /></g>
+              </g>
+              <g strokeWidth="1.2">
+                <g transform="translate(1240 244)"><path d="M0 0 L 0 -10" /><path d="M-10 -10 L 0 -28 L 10 -10 Z M -8 -20 L 0 -34 L 8 -20 Z M -6 -28 L 0 -42 L 6 -28 Z" /></g>
+                <g transform="translate(1268 246)"><path d="M0 0 L 0 -8" /><path d="M-8 -8 L 0 -22 L 8 -8 Z M -6 -16 L 0 -28 L 6 -16 Z" /></g>
+                <g transform="translate(1294 244)"><path d="M0 0 L 0 -12" /><path d="M-12 -12 L 0 -32 L 12 -12 Z M -9 -22 L 0 -38 L 9 -22 Z M -6 -30 L 0 -44 L 6 -30 Z" /></g>
+                <g transform="translate(1318 246)"><path d="M0 0 L 0 -7" /><path d="M-7 -7 L 0 -18 L 7 -7 Z M -5 -14 L 0 -24 L 5 -14 Z" /></g>
+              </g>
+              <g strokeWidth="1.2" transform="translate(560 240)">
+                <path d="M0 0 L 0 -10" /><path d="M-10 -10 L 0 -26 L 10 -10 Z M -7 -20 L 0 -32 L 7 -20 Z M -5 -28 L 0 -40 L 5 -28 Z" />
+              </g>
+              <g strokeWidth="1.1" strokeOpacity="0.6">
+                <path d="M 740 70 q 6 -6 12 0 q 6 -6 12 0" /><path d="M 820 90 q 5 -5 10 0 q 5 -5 10 0" /><path d="M 380 60 q 5 -5 10 0 q 5 -5 10 0" />
+              </g>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      {/* ══════════ ABOUT ══════════ */}
+      <section className="hp-section" id="about">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 02 — About</span>
+            <h2 className="hp-display">Hi, I&apos;m <em>Jeimer</em>.</h2>
+          </header>
+
+          <div className="hp-about">
+            <div className="hp-about-portrait-wrap">
+              <div className="hp-about-portrait-offset" aria-hidden="true"></div>
+              <div className="hp-about-portrait">
+                <svg className="hp-about-portrait-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                  <g fill="none" stroke="#1E2D40" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M 0 380 Q 100 374 200 378 T 400 374" strokeOpacity="0.35" />
+                    <path d="M 40 380 L 110 320 L 150 350 L 220 290 L 280 340 L 340 310 L 380 360" strokeOpacity="0.45" strokeWidth="1.2" />
+                    <g strokeWidth="0.8" strokeOpacity="0.35">
+                      <line x1="222" y1="300" x2="240" y2="328" /><line x1="230" y1="296" x2="252" y2="334" /><line x1="240" y1="296" x2="262" y2="338" />
+                    </g>
+                    <g strokeWidth="1.2">
+                      <g transform="translate(90 388)"><path d="M0 0 L 0 -8" /><path d="M-9 -8 L 0 -22 L 9 -8 Z M -6 -16 L 0 -28 L 6 -16 Z M -4 -22 L 0 -34 L 4 -22 Z" /></g>
+                      <g transform="translate(118 390)"><path d="M0 0 L 0 -6" /><path d="M-7 -6 L 0 -18 L 7 -6 Z M -5 -14 L 0 -24 L 5 -14 Z" /></g>
+                      <g transform="translate(310 388)"><path d="M0 0 L 0 -10" /><path d="M-10 -10 L 0 -26 L 10 -10 Z M -7 -18 L 0 -30 L 7 -18 Z M -5 -26 L 0 -38 L 5 -26 Z" /></g>
+                    </g>
+                    <circle cx="170" cy="240" r="20" />
+                    <path d="M158 224 Q 162 214 170 216" /><path d="M172 216 Q 180 214 184 222" />
+                    <path d="M152 264 Q 144 312 156 360" /><path d="M188 264 Q 196 312 184 360" />
+                    <path d="M155 268 L 145 338" /><path d="M186 268 L 198 338" />
+                    <circle cx="240" cy="316" r="14" />
+                    <path d="M230 326 Q 228 360 240 366" /><path d="M250 326 Q 252 360 240 366" />
+                    <path d="M226 358 L 256 358" strokeOpacity="0.6" />
+                    <rect x="198" y="332" width="36" height="22" rx="3" />
+                    <line x1="216" y1="338" x2="216" y2="348" strokeOpacity="0.5" />
+                    <g stroke="#C4724A" strokeWidth="1.4">
+                      <path d="M240 286 L 240 274" /><path d="M226 292 L 218 286" /><path d="M254 292 L 262 286" />
+                    </g>
+                  </g>
+                </svg>
+
+                <svg className="hp-about-corner tl" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
+                <svg className="hp-about-corner tr" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
+                <svg className="hp-about-corner bl" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
+                <svg className="hp-about-corner br" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><path d="M2 10 L 2 2 L 10 2" /></svg>
+
+                <span className="hp-about-caption">Jeimer, working<small>Lucas&apos;s lounge · 2025</small></span>
+                <span className="hp-about-stamp">Roll 03<br />Frame 02</span>
               </div>
+            </div>
+
+            <div>
+              <div className="hp-about-prose">
+                <p>I&apos;m a paediatric occupational therapist in Perth. I work mostly with kids who use wheelchairs — and mostly on what those kids actually want to do, which is usually <em>&ldquo;play this video game with my mates&rdquo;</em>.</p>
+                <p>After eight years across hospitals, schools and homes, I started Assured OT to do this work the way it should be done: slowly, properly, and with the kid steering. No 30-minute slots. No clipboard energy. No pretending Mario Kart isn&apos;t therapy.</p>
+                <p>It is therapy. <em>Joy is the goal.</em></p>
+              </div>
+              <span className="hp-about-sig">— Jeimer</span>
+              <div className="hp-about-creds">
+                <span className="hp-cred"><span className="hp-cred-key">B.OT</span>Curtin, &apos;17</span>
+                <span className="hp-cred">AHPRA registered</span>
+                <span className="hp-cred">NDIS Provider <span className="hp-cred-key" style={{ marginLeft: '4px' }}>#4050000142</span></span>
+                <span className="hp-cred"><span className="hp-cred-key">8+</span>years paediatric</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ SERVICES ══════════ */}
+      <section className="hp-section hp-section--sand" id="services">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 03 — Services</span>
+            <div>
+              <h2 className="hp-display">What I <em>work on</em>.</h2>
+              <span className="hp-caveat-deco">↳ all NDIS-billable</span>
+            </div>
+          </header>
+
+          <ul className="hp-services-list">
+            {[
+              { num: '/ 01', title: <>Adaptive <em>gaming</em></>, desc: 'Switch- and PC-compatible setups. Eye-gaze, head-tracking, button mapping, voice control. Whatever it takes to get the controller into the kid\'s hands — even when "hands" isn\'t the right word.' },
+              { num: '/ 02', title: 'Switch & alt. controllers', desc: 'Microsoft Adaptive, 8BitDo Lite SE, Quadstick, Aimee Mounts. I keep about forty things in the car. You try them at your place, we keep what works.' },
+              { num: '/ 03', title: <><em>AT</em> assessments</>, desc: 'Functional capacity assessments and AT funding requests. Reports that arrive on time and read like English, written for the planner who has thirty more to get through today.' },
+              { num: '/ 04', title: 'Mounting & positioning', desc: 'Wheelchair-mounted iPads, switch trays, head-pointer rigs, fabricated brackets. Built to survive a school day and the trip there.' },
+              { num: '/ 05', title: <><em>NDIS</em> reports</>, desc: 'Plan reviews, capacity-building goal mapping, equipment justifications. Written so a parent and a planner can both follow them on the first read.' },
+              { num: '/ 06', title: 'Home & school visits', desc: 'I come to where the kid actually lives. Perth metro and out to Mandurah, no extra charge. Schools welcome — I bring the gear and the patience for a teachers\' meeting.' },
+            ].map(({ num, title, desc }) => (
+              <li className="hp-service" key={num}>
+                <span className="hp-service-num">{num}</span>
+                <h3 className="hp-service-title">{title}</h3>
+                <p className="hp-service-desc">{desc}</p>
+                <span className="hp-service-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M4 12 L 12 4" /><path d="M6 4 L 12 4 L 12 10" />
+                  </svg>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ══════════ PROCESS ══════════ */}
+      <section className="hp-section hp-process" id="process">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 04 — How it works</span>
+            <h2 className="hp-display">A simple route from <em>hello</em> to playing.</h2>
+          </header>
+
+          <div className="hp-process-grid">
+            {[
+              { n: '01', title: 'We chat', desc: 'A free 20-minute call to talk about your kid, what\'s going on, and what they love doing. No clipboard. No commitment.' },
+              { n: '02', title: 'We meet', desc: 'First proper session at your place. We play, I watch closely, we try a few things from the kit in the car.' },
+              { n: '03', title: 'We build', desc: 'Custom setup of devices, mounts, software. I source the gear, your kid trials it, we adjust until it disappears into the day.' },
+              { n: '04', title: 'We tune', desc: 'Quarterly check-ins so the setup grows with your kid. Bodies change, games change, school changes — the rig should follow.' },
+            ].map(({ n, title, desc }) => (
+              <div className="hp-step" key={n}>
+                <span className="hp-step-num">{n}</span>
+                <h3 className="hp-step-title">{title}</h3>
+                <p className="hp-step-desc">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="hp-process-mountains" aria-hidden="true">
+            <svg viewBox="0 0 1600 180" preserveAspectRatio="xMidYMax slice" fill="none" stroke="#1E2D40" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M0 140 L 140 60 L 220 110 L 340 30 L 460 110 L 580 70 L 720 130 L 860 50 L 980 120 L 1140 60 L 1280 130 L 1420 80 L 1600 130" />
+              <path d="M0 160 Q 200 144 400 152 T 800 148 T 1200 146 T 1600 150" strokeOpacity="0.5" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ STORIES ══════════ */}
+      <section className="hp-section" id="stories">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 05 — Stories from the field</span>
+            <div>
+              <h2 className="hp-display">Kids doing things they <em>couldn&apos;t</em> last year.</h2>
+              <p className="hp-stories-intro">Names changed, wins real. Shared with family permission, and only the bits the kid was happy to share.</p>
+            </div>
+          </header>
+
+          <div className="hp-stories">
+            {/* Story 1 */}
+            <article className="hp-polaroid">
+              <span className="hp-polaroid-tape" aria-hidden="true"></span>
+              <div className="hp-polaroid-photo">
+                <svg className="hp-polaroid-silhouette" viewBox="0 0 200 200" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                  <g fill="none" stroke="#1E2D40" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="100" cy="80" r="14" />
+                    <path d="M88 95 Q 80 130 88 168" /><path d="M112 95 Q 120 130 112 168" />
+                    <circle cx="86" cy="170" r="22" /><circle cx="86" cy="170" r="9" strokeOpacity="0.5" />
+                    <circle cx="134" cy="180" r="12" />
+                    <path d="M70 170 L 70 130 L 130 124 L 134 180" />
+                    <rect x="88" y="124" width="24" height="10" rx="3" />
+                    <g stroke="#C4724A" strokeWidth="1.4"><path d="M100 56 L 100 46" /><path d="M86 62 L 80 58" /></g>
+                  </g>
+                </svg>
+              </div>
+              <div className="hp-polaroid-caption">Lucas, 8<small>Spinal muscular atrophy</small></div>
+              <p className="hp-polaroid-story">Switch + Microsoft Adaptive Controller. Started with two mapped buttons. Now running six, plus a chin-switch for the right trigger. Beats his brother regularly.</p>
+              <p className="hp-polaroid-quote">He beats his older brother now. Loudly.<span className="hp-polaroid-credit">— Lucas&apos;s mum</span></p>
+            </article>
+
+            {/* Story 2 */}
+            <article className="hp-polaroid">
+              <span className="hp-polaroid-tape" aria-hidden="true"></span>
+              <div className="hp-polaroid-photo">
+                <svg className="hp-polaroid-silhouette" viewBox="0 0 200 200" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                  <g fill="none" stroke="#1E2D40" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="40" y="60" width="120" height="80" rx="4" />
+                    <path d="M70 140 L 70 156 L 130 156 L 130 140" /><path d="M60 156 L 140 156" />
+                    <g strokeOpacity="0.45">
+                      <rect x="56" y="76" width="18" height="18" /><rect x="76" y="76" width="18" height="18" />
+                      <rect x="56" y="96" width="18" height="18" /><rect x="76" y="96" width="18" height="18" />
+                      <rect x="116" y="86" width="28" height="28" />
+                    </g>
+                    <circle cx="100" cy="50" r="3" fill="#C4724A" stroke="none" />
+                    <path d="M100 50 L 100 100" stroke="#C4724A" strokeWidth="1" strokeOpacity="0.5" strokeDasharray="2 3" />
+                  </g>
+                </svg>
+              </div>
+              <div className="hp-polaroid-caption">Mia, 11<small>Cerebral palsy · Eye-gaze</small></div>
+              <p className="hp-polaroid-story">Tobii eye-gaze rig for Minecraft and schoolwork. Spent six weeks dialling in dwell times. Then her redstone circuits got better than mine.</p>
+              <p className="hp-polaroid-quote">She built a castle. Then she built a school for the castle.<span className="hp-polaroid-credit">— Mia&apos;s dad</span></p>
+            </article>
+
+            {/* Story 3 */}
+            <article className="hp-polaroid">
+              <span className="hp-polaroid-tape" aria-hidden="true"></span>
+              <div className="hp-polaroid-photo">
+                <svg className="hp-polaroid-silhouette" viewBox="0 0 200 200" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                  <g fill="none" stroke="#1E2D40" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="80" cy="160" r="26" /><circle cx="80" cy="160" r="11" strokeOpacity="0.5" />
+                    <circle cx="148" cy="176" r="14" />
+                    <path d="M60 160 L 60 100 L 140 92 L 148 176" />
+                    <path d="M110 100 L 110 70 L 150 60 L 168 80" strokeOpacity="0.7" />
+                    <rect x="138" y="46" width="44" height="32" rx="3" />
+                    <line x1="140" y1="50" x2="180" y2="50" strokeOpacity="0.4" />
+                    <circle cx="98" cy="80" r="12" />
+                    <path d="M88 92 Q 86 116 96 124" /><path d="M108 92 Q 110 116 100 124" />
+                  </g>
+                </svg>
+              </div>
+              <div className="hp-polaroid-caption">Eli, 6<small>Muscular dystrophy</small></div>
+              <p className="hp-polaroid-story">Wheelchair-mounted iPad with two-switch scan access. The mount geometry took five iterations. He&apos;s been on the same setup for eleven months — best result we have.</p>
+              <p className="hp-polaroid-quote">He hasn&apos;t asked for the iPad to be moved in three weeks.<span className="hp-polaroid-credit">— Eli&apos;s mum</span></p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ PRACTITIONERS ══════════ */}
+      <section className="hp-section hp-section--navy" id="practitioners">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 06 — For practitioners</span>
+            <h2 className="hp-display">Sending a <em>referral</em>?</h2>
+          </header>
+
+          <div className="hp-practitioners">
+            <div>
+              <p className="hp-practitioners-lede">
+                <strong>Plain answers to the things you&apos;d otherwise have to email and ask.</strong> If you need something specific — a paediatrician&apos;s report, a school OHS visit, a co-treatment with speech — hit reply, I&apos;ll get back same day.
+              </p>
+              <div className="hp-dl-row">
+                <a href="#" className="hp-dl">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
+                  Referral form <span className="hp-dl-ext">PDF · 84 KB</span>
+                </a>
+                <a href="#" className="hp-dl">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2 L 8 11" /><path d="M4 8 L 8 12 L 12 8" /><path d="M3 14 L 13 14" /></svg>
+                  Service brochure <span className="hp-dl-ext">PDF · 1.2 MB</span>
+                </a>
+                <a href="mailto:hello@assuredot.com.au" className="hp-dl">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 L 11 5" /><path d="M6 5 L 11 5 L 11 10" /></svg>
+                  Email Jeimer <span className="hp-dl-ext">hello@assuredot.com.au</span>
+                </a>
+              </div>
+              <div className="hp-waitlist">
+                <span className="dot" aria-hidden="true"></span>
+                Currently taking new referrals · <em>&nbsp;next intake June 2026</em>
+              </div>
+            </div>
+
+            <div className="hp-brief-table" role="presentation">
+              {[
+                { key: 'Initial response', val: <><em>Within 24 hours</em><small>Mon–Fri, AWST</small></> },
+                { key: 'First session', val: <>1–2 weeks typically<small>Subject to current waitlist</small></> },
+                { key: 'Report turnaround', val: <>10 business days<small>Plain English · NDIS-ready</small></> },
+                { key: 'Funding accepted', val: <>Plan, self &amp; agency-managed<small>NDIS Provider #4050000142</small></> },
+                { key: 'Service area', val: <>Perth metro + Mandurah<small>Home, school, clinic visits</small></> },
+                { key: 'Ages seen', val: <>3 – 18<small>Most work happens between 6 and 14</small></> },
+              ].map(({ key, val }) => (
+                <div className="hp-brief-row" key={key}>
+                  <span className="hp-brief-key">{key}</span>
+                  <span className="hp-brief-val">{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ FAQ ══════════ */}
+      <section className="hp-section" id="faq">
+        <div className="hp-container">
+          <header className="hp-section-head">
+            <span className="hp-folio">§ 07 — Common questions</span>
+            <h2 className="hp-display">Things parents ask <em>first</em>.</h2>
+          </header>
+
+          <div className="hp-faq">
+            {[
+              { num: '/ 01', q: 'Are you NDIS registered?', a: <>Yes — registered NDIS provider, number <em>#4050000142</em>. I work with plan-managed, self-managed and agency-managed plans. If you&apos;re not on NDIS, we can still talk about private options.</> },
+              { num: '/ 02', q: 'What ages do you work with?', a: 'Three to eighteen. The bulk of the work happens between six and fourteen, but I\'ll always have a chat about anyone in that range — sometimes earlier or later makes sense.' },
+              { num: '/ 03', q: 'Do you offer telehealth?', a: 'Sometimes — for catch-ups, planning sessions, family check-ins. The hands-on work happens in person. Most of what I do revolves around equipment, and equipment needs a body in the room.' },
+              { num: '/ 04', q: 'How much does it cost?', a: <>Standard NDIS price guide rates. <em>$193.99/hr</em> for OT, plus travel for home and school visits within reasonable distance. The initial 20-minute chat is free, and you only commit to anything after we&apos;ve spoken.</> },
+              { num: '/ 05', q: 'Do you do home visits?', a: 'Yes — most of my sessions happen at clients\' homes. Perth metro and out to Mandurah without extra charge. Further afield, we\'ll have a conversation about travel. Schools and clinics also welcome.' },
+              { num: '/ 06', q: "What if my child doesn't speak?", a: "Most of the kids I work with communicate in ways that aren't speech. We'll find the channel — AAC, eye-gaze, switches, gestures, drawings, whatever works. The therapy doesn't depend on words." },
+            ].map(({ num, q, a }) => (
+              <details className="hp-faq-item" key={num}>
+                <summary className="hp-faq-trigger">
+                  <span className="hp-faq-num">{num}</span>
+                  <span className="hp-faq-q">{q}</span>
+                  <span className="hp-faq-plus" aria-hidden="true"></span>
+                </summary>
+                <div className="hp-faq-a">
+                  <div className="hp-faq-a-inner">{a}</div>
+                </div>
+              </details>
             ))}
           </div>
         </div>
       </section>
-    </RevealOnScroll>
-  )
-}
 
-// ─── About Intro ────────────────────────────────────────────────────────────
-function AboutIntro() {
-  return (
-    <section
-      className="section-pad"
-      style={{ background: 'var(--off-white)' }}
-      aria-label="About Jeimer"
-    >
-      <div className="container-content">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Photo */}
-          <RevealOnScroll>
-            <div className="relative">
-              <div
-                className="aspect-[3/4] rounded-[20px] overflow-hidden"
-                style={{ background: 'var(--sketch-cream)' }}
-              >
-                {/* Photo placeholder */}
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center" style={{ color: 'var(--warm-stone)' }}>
-                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mx-auto mb-2" aria-hidden="true">
-                      <circle cx="24" cy="18" r="8" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M6 44C6 34 14 28 24 28C34 28 42 34 42 44" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      {/* ══════════ CONTACT ══════════ */}
+      <section className="hp-contact-section" id="contact">
+        <div className="hp-contact-block">
+          <div className="hp-contact-grid">
+            <div>
+              <span className="hp-folio" style={{ color: 'rgba(253,250,245,0.55)' }}>§ 08 — Let&apos;s talk</span>
+              <h2 className="hp-contact-display" style={{ marginTop: '24px' }}>
+                Let&apos;s chat about <em>your kid</em>.
+              </h2>
+              <span className="hp-contact-caveat">↳ no clipboards, promise.</span>
+              <div style={{ marginTop: '8px' }}>
+                <a href="tel:+61865550142" className="hp-btn">
+                  Book a 20-min chat
+                  <span className="hp-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 6 H 14" /><path d="M9 1.5 L 14 6 L 9 10.5" />
                     </svg>
-                    <p className="font-caveat text-sm opacity-50">Jeimer's portrait</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating annotation */}
-              <div
-                className="absolute -bottom-4 -right-4 px-4 py-3 rounded-card"
-                style={{
-                  background: 'var(--navy)',
-                  color: 'var(--sand-white)',
-                }}
-              >
-                <p className="font-caveat text-lg" style={{ color: 'var(--terracotta)' }}>
-                  "Joy is the goal."
-                </p>
-              </div>
-            </div>
-          </RevealOnScroll>
-
-          {/* Copy */}
-          <RevealOnScroll delay={120}>
-            <div>
-              <span
-                className="font-caveat text-xl block mb-3"
-                style={{ color: 'var(--terracotta)' }}
-              >
-                Hi, I'm Jeimer.
-              </span>
-              <h2
-                className="font-lora font-bold mb-6"
-                style={{ fontSize: '32px', color: 'var(--deep-ink)', lineHeight: 1.2 }}
-              >
-                An OT who believes your child's potential is bigger than their diagnosis
-              </h2>
-              <p
-                className="font-sans mb-4"
-                style={{ fontSize: '18px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.8 }}
-              >
-                I started Assured OT because I kept seeing kids written off — told what they couldn't
-                do before anyone had tried to find a way they could. That felt wrong.
-              </p>
-              <p
-                className="font-sans mb-8"
-                style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.7 }}
-              >
-                My work centres on physical disability — particularly kids who use wheelchairs — and
-                finding the tools, technologies, and strategies that let them access the things that
-                matter: games, friends, school, their own space. Real life.
-              </p>
-              <Link
-                href="/about"
-                className="btn-arrow inline-flex items-center gap-2 font-sans font-medium text-sm transition-colors duration-200"
-                style={{ color: 'var(--navy)' }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.color = 'var(--terracotta)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)'
-                }}
-              >
-                Read Jeimer's story <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </RevealOnScroll>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Services Overview ──────────────────────────────────────────────────────
-const services = [
-  {
-    illus: 'controller' as const,
-    title: 'Accessible gaming',
-    desc: "Adaptive controllers, custom setups, and support to get your child into gaming on their terms — because play doesn't have a prerequisite.",
-    href: '/services#adaptive-gaming',
-  },
-  {
-    illus: 'wheelchair' as const,
-    title: 'Wheelchair & mobility',
-    desc: "Seating assessments, mobility aid prescription, and environment modifications to maximise your child's independence and comfort.",
-    href: '/services#wheelchair-access',
-  },
-  {
-    illus: 'puzzle' as const,
-    title: 'Assistive technology',
-    desc: "From communication aids to smart home controls — finding the right technology stack for your child's specific strengths and needs.",
-    href: '/services#assistive-tech',
-  },
-  {
-    illus: 'lightbulb' as const,
-    title: 'Home modifications',
-    desc: 'Practical assessments and recommendations that make the home work better — for your child and for your family.',
-    href: '/services#home-modification',
-  },
-  {
-    illus: 'joystick' as const,
-    title: 'School & community access',
-    desc: 'Strategies, reports, and advocacy to help your child participate fully in school and community life on equal footing.',
-    href: '/services#school-support',
-  },
-  {
-    illus: 'mountain-tree' as const,
-    title: 'NDIS planning support',
-    desc: "Assessments, reports, and guidance to help families navigate the NDIS and build plans that actually reflect what's needed.",
-    href: '/services#ndis',
-  },
-]
-
-function ServicesOverview() {
-  return (
-    <section
-      className="section-pad"
-      style={{ background: 'var(--sand)' }}
-      aria-label="Services"
-    >
-      <div className="container-content">
-        <RevealOnScroll>
-          <div className="text-center mb-14">
-            <span className="font-caveat text-xl block mb-3" style={{ color: 'var(--terracotta)' }}>
-              what we do together
-            </span>
-            <h2
-              className="font-lora font-bold"
-              style={{ fontSize: '36px', color: 'var(--deep-ink)', letterSpacing: '-0.01em' }}
-            >
-              Services built for real life
-            </h2>
-          </div>
-        </RevealOnScroll>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map(({ illus, title, desc, href }, i) => (
-            <RevealOnScroll key={title} delay={i * 80}>
-              <Link
-                href={href}
-                className="card-hover block p-8 rounded-card group"
-                style={{ background: 'var(--off-white)' }}
-              >
-                <SpotIllustration type={illus} size={48} className="mb-5" />
-                <h3
-                  className="font-sans font-semibold mb-3"
-                  style={{ fontSize: '20px', color: 'var(--deep-ink)' }}
-                >
-                  {title}
-                </h3>
-                <p
-                  className="font-sans text-sm leading-relaxed mb-5"
-                  style={{ color: 'var(--deep-ink)', opacity: 0.7 }}
-                >
-                  {desc}
-                </p>
-                <span
-                  className="btn-arrow inline-flex items-center gap-1 font-sans text-sm font-medium transition-colors duration-200"
-                  style={{ color: 'var(--terracotta)' }}
-                >
-                  Learn more <ChevronRight size={14} />
-                </span>
-              </Link>
-            </RevealOnScroll>
-          ))}
-        </div>
-
-        <RevealOnScroll delay={200}>
-          <div className="text-center mt-12">
-            <Link
-              href="/services"
-              className="btn-arrow inline-flex items-center font-sans font-medium px-6 py-3 rounded-btn border-2 transition-all duration-200"
-              style={{
-                borderColor: 'var(--navy)',
-                color: 'var(--navy)',
-                background: 'transparent',
-              }}
-              onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLElement).style.background = 'var(--navy)'
-                ;(e.currentTarget as HTMLElement).style.color = 'var(--sand-white)'
-              }}
-              onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)'
-              }}
-            >
-              View all services <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-        </RevealOnScroll>
-      </div>
-    </section>
-  )
-}
-
-// ─── Vignette / Real-life moment ────────────────────────────────────────────
-function VignetteSection() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const illustRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (!sectionRef.current || !illustRef.current) return
-      const rect = sectionRef.current.getBoundingClientRect()
-      const offset = -rect.top * 0.2
-      illustRef.current.style.transform = `translateY(${offset}px)`
-    }
-
-    // Only on desktop, respect reduced motion
-    const mq = window.matchMedia('(min-width: 1024px) and (prefers-reduced-motion: no-preference)')
-    if (mq.matches) {
-      window.addEventListener('scroll', onScroll, { passive: true })
-      return () => window.removeEventListener('scroll', onScroll)
-    }
-  }, [])
-
-  return (
-    <section
-      ref={sectionRef}
-      className="section-pad overflow-hidden"
-      style={{ background: 'var(--off-white)' }}
-      aria-label="A real-life story"
-    >
-      <div className="container-content">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Parallax illustration */}
-          <RevealOnScroll>
-            <div
-              ref={illustRef}
-              className="relative aspect-square rounded-[20px] overflow-hidden"
-              style={{ background: 'var(--sketch-cream)' }}
-              aria-hidden="true"
-            >
-              <svg viewBox="0 0 400 400" className="w-full h-full p-8" fill="none">
-                {/* Child at gaming setup — pen sketch */}
-                {/* Desk */}
-                <rect x="80" y="260" width="240" height="12" rx="3" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <line x1="100" y1="272" x2="100" y2="330" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="300" y1="272" x2="300" y2="330" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Monitor */}
-                <rect x="140" y="180" width="120" height="78" rx="4" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <line x1="200" y1="258" x2="200" y2="268" stroke="var(--navy)" strokeWidth="1.5" />
-                <line x1="180" y1="268" x2="220" y2="268" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Screen content */}
-                <path d="M155 230 L175 210 L195 225 L210 215 L245 230" stroke="var(--terracotta)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                {/* Controller */}
-                <rect x="158" y="275" width="48" height="26" rx="8" stroke="var(--navy)" strokeWidth="1.2" fill="none" />
-                <circle cx="176" cy="288" r="1.5" fill="var(--navy)" />
-                <circle cx="182" cy="284" r="1.5" fill="var(--navy)" />
-                <circle cx="182" cy="292" r="1.5" fill="var(--navy)" />
-                <circle cx="188" cy="288" r="1.5" fill="var(--navy)" />
-                <circle cx="164" cy="288" r="3" stroke="var(--navy)" strokeWidth="1" fill="none" />
-                {/* Child in wheelchair */}
-                {/* Wheelchair wheels */}
-                <circle cx="88" cy="308" r="28" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <circle cx="88" cy="308" r="20" stroke="var(--navy)" strokeWidth="0.8" fill="none" opacity="0.4" />
-                <circle cx="88" cy="308" r="3" fill="var(--navy)" />
-                <circle cx="136" cy="318" r="14" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                {/* Frame */}
-                <path d="M116 255 L100 295 L136 304" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <line x1="116" y1="255" x2="140" y2="255" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Person */}
-                <circle cx="130" cy="230" r="14" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                <path d="M116 244 C116 255 120 255 130 255 C140 255 144 255 144 244" stroke="var(--navy)" strokeWidth="1.5" fill="none" />
-                {/* Arm reaching to controller */}
-                <path d="M144 248 L158 275" stroke="var(--navy)" strokeWidth="1.5" strokeLinecap="round" />
-                {/* Joy sparks */}
-                <path d="M310 150 L315 140 M318 160 L328 158 M308 168 L302 175" stroke="var(--terracotta)" strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M46 200 L52 193 M40 212 L33 210 M50 222 L46 230" stroke="var(--terracotta)" strokeWidth="1.2" strokeLinecap="round" />
-                {/* Mountain background */}
-                <path d="M0 380 L80 300 L160 340 L250 280 L340 310 L400 280 L400 400 L0 400 Z" stroke="var(--navy)" strokeWidth="0.8" fill="none" opacity="0.15" />
-              </svg>
-            </div>
-          </RevealOnScroll>
-
-          {/* Copy */}
-          <RevealOnScroll delay={120}>
-            <div>
-              <span
-                className="font-caveat text-xl block mb-4"
-                style={{ color: 'var(--terracotta)' }}
-              >
-                what this looks like
-              </span>
-              <h2
-                className="font-lora font-bold mb-6"
-                style={{ fontSize: '32px', color: 'var(--deep-ink)', lineHeight: 1.2 }}
-              >
-                From "he'll never play video games" to first-person shooter in six weeks
-              </h2>
-              <p
-                className="font-sans mb-4"
-                style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.8 }}
-              >
-                When Lucas came to see me, his parents had been told he'd never be able to use a
-                standard controller. He had a progressive neuromuscular condition and limited hand
-                function — but he <em>desperately</em> wanted to play Fortnite with his mates.
-              </p>
-              <p
-                className="font-sans mb-8"
-                style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.7 }}
-              >
-                Six weeks later, he was competing online. Not through some miracle, but through the
-                right adaptive controller, the right mount position, and a little creative
-                problem-solving. That's what this work actually is.
-              </p>
-              <p
-                className="font-sans text-caption italic"
-                style={{ color: 'var(--warm-stone)' }}
-              >
-                * Name changed. Story shared with permission.
-              </p>
-            </div>
-          </RevealOnScroll>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Dual CTA ───────────────────────────────────────────────────────────────
-function DualCTA() {
-  return (
-    <section
-      className="section-pad"
-      style={{ background: 'var(--sketch-cream)' }}
-      aria-label="Get started"
-    >
-      <div className="container-content">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <RevealOnScroll>
-            <div
-              className="p-10 rounded-card flex flex-col"
-              style={{ background: 'var(--navy)', minHeight: '260px' }}
-              data-dark-bg
-            >
-              <h3
-                className="font-lora font-bold mb-3"
-                style={{ fontSize: '26px', color: 'var(--sand-white)', lineHeight: 1.2 }}
-              >
-                Not sure where to start?
-              </h3>
-              <p
-                className="font-sans mb-8 flex-1"
-                style={{ fontSize: '16px', color: 'var(--sand)', opacity: 0.85, lineHeight: 1.65 }}
-              >
-                Let's have a conversation. No forms, no commitments — just a chat about your child
-                and whether I can help.
-              </p>
-              <Link
-                href="/contact"
-                className="btn-arrow inline-flex items-center self-start font-sans font-medium px-5 py-2.5 rounded-btn transition-all duration-200"
-                style={{
-                  background: 'var(--sand-white)',
-                  color: 'var(--navy)',
-                  fontSize: '15px',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--terracotta)'
-                  ;(e.currentTarget as HTMLElement).style.color = 'white'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--sand-white)'
-                  ;(e.currentTarget as HTMLElement).style.color = 'var(--navy)'
-                }}
-              >
-                Get in touch <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </RevealOnScroll>
-
-          <RevealOnScroll delay={100}>
-            <div
-              className="p-10 rounded-card flex flex-col border-2"
-              style={{
-                background: 'var(--off-white)',
-                borderColor: 'var(--warm-stone)',
-                minHeight: '260px',
-              }}
-            >
-              <h3
-                className="font-lora font-bold mb-3"
-                style={{ fontSize: '26px', color: 'var(--deep-ink)', lineHeight: 1.2 }}
-              >
-                Ready to make a referral?
-              </h3>
-              <p
-                className="font-sans mb-8 flex-1"
-                style={{ fontSize: '16px', color: 'var(--deep-ink)', opacity: 0.75, lineHeight: 1.65 }}
-              >
-                Practitioners, GPs, paediatricians, and schools — the referral process is simple and
-                takes about 3 minutes.
-              </p>
-              <Link
-                href="/referral"
-                className="btn-arrow inline-flex items-center self-start font-sans font-medium px-5 py-2.5 rounded-btn transition-all duration-200"
-                style={{
-                  background: 'var(--terracotta)',
-                  color: 'white',
-                  fontSize: '15px',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--navy)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.background = 'var(--terracotta)'
-                }}
-              >
-                Make a referral <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </RevealOnScroll>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── FAQ ────────────────────────────────────────────────────────────────────
-const faqs = [
-  {
-    q: 'Do you work with kids outside of Perth?',
-    a: "Currently I work primarily with families based in Perth and surrounds. I do offer telehealth consultations for initial assessments and NDIS planning support, so if you're regional, let's chat about what's possible.",
-  },
-  {
-    q: "My child isn't on the NDIS yet — can you still help?",
-    a: 'Yes. I work with families regardless of NDIS status and can provide assessments and support that may assist with an NDIS application. Private billing options are available.',
-  },
-  {
-    q: 'What age range do you work with?',
-    a: "Primarily children and adolescents up to 18, though I have worked with young adults in transition planning. If you're unsure, just reach out.",
-  },
-  {
-    q: 'How long does the process take — from referral to first appointment?',
-    a: 'I aim to be in contact within 2 business days of receiving a referral, and typically have appointment availability within 2–3 weeks depending on the time of year.',
-  },
-  {
-    q: "Do I need a doctor's referral to access your services?",
-    a: "No GP referral is required. Parents, carers, schools, and practitioners can all refer directly. Self-referrals are absolutely welcome.",
-  },
-]
-
-function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-
-  return (
-    <section
-      className="section-pad"
-      style={{ background: 'var(--off-white)' }}
-      aria-label="Frequently asked questions"
-    >
-      <div className="container-content max-w-[760px] mx-auto">
-        <RevealOnScroll>
-          <h2
-            className="font-lora font-bold mb-12 text-center"
-            style={{ fontSize: '32px', color: 'var(--deep-ink)' }}
-          >
-            Questions people feel awkward asking
-          </h2>
-        </RevealOnScroll>
-
-        <div role="list">
-          {faqs.map(({ q, a }, i) => (
-            <RevealOnScroll key={q} delay={i * 50}>
-              <div
-                role="listitem"
-                className="border-b"
-                style={{
-                  borderColor: 'var(--warm-stone)',
-                  borderLeftWidth: openIndex === i ? '3px' : '0',
-                  borderLeftColor: 'var(--terracotta)',
-                  borderLeftStyle: 'solid',
-                  paddingLeft: openIndex === i ? '16px' : '0',
-                  transition: 'all 200ms ease',
-                }}
-              >
-                <button
-                  className="w-full flex justify-between items-start gap-4 py-5 text-left"
-                  onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                  aria-expanded={openIndex === i}
-                  aria-controls={`faq-answer-${i}`}
-                  id={`faq-question-${i}`}
-                >
-                  <span
-                    className="font-sans font-medium"
-                    style={{ fontSize: '16px', color: 'var(--deep-ink)' }}
-                  >
-                    {q}
                   </span>
-                  <ChevronDown
-                    size={18}
-                    className="flex-shrink-0 mt-0.5"
-                    style={{
-                      color: 'var(--terracotta)',
-                      transform: openIndex === i ? 'rotate(180deg)' : 'rotate(0)',
-                      transition: 'transform 300ms ease',
-                    }}
-                  />
-                </button>
-
-                <div
-                  id={`faq-answer-${i}`}
-                  role="region"
-                  aria-labelledby={`faq-question-${i}`}
-                  className={`accordion-content ${openIndex === i ? 'open' : ''}`}
-                >
-                  <p
-                    className="font-sans pb-5"
-                    style={{ fontSize: '15px', lineHeight: 1.65, color: 'var(--deep-ink)', opacity: 0.75 }}
-                  >
-                    {a}
-                  </p>
-                </div>
+                </a>
               </div>
-            </RevealOnScroll>
-          ))}
+            </div>
+
+            <div className="hp-contact-details">
+              <div className="hp-contact-line">
+                <span className="hp-contact-label">Call</span>
+                <span className="hp-contact-val">
+                  <a href="tel:+61865550142">(08) 6555 0142</a>
+                  <small>Mon–Fri, 9am–5pm AWST</small>
+                </span>
+              </div>
+              <div className="hp-contact-line">
+                <span className="hp-contact-label">Email</span>
+                <span className="hp-contact-val">
+                  <a href="mailto:hello@assuredot.com.au">hello@assuredot.com.au</a>
+                  <small>I reply same day, usually within the hour.</small>
+                </span>
+              </div>
+              <div className="hp-contact-line">
+                <span className="hp-contact-label">Visit</span>
+                <span className="hp-contact-val">
+                  Crawley, Perth WA 6009
+                  <small>By appointment, or I come to you.</small>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <RevealOnScroll delay={200}>
-          <p
-            className="font-sans text-center mt-10 text-sm"
-            style={{ color: 'var(--deep-ink)', opacity: 0.6 }}
-          >
-            Something else on your mind?{' '}
-            <Link
-              href="/contact"
-              className="underline"
-              style={{ color: 'var(--terracotta)' }}
-            >
-              Just ask.
-            </Link>
-          </p>
-        </RevealOnScroll>
-      </div>
-    </section>
-  )
-}
-
-// ─── Page ───────────────────────────────────────────────────────────────────
-export default function HomePage() {
-  return (
-    <>
-      <HeroSection />
-      <MountainDivider />
-      <SocialProofBar />
-      <MountainDivider />
-      <AboutIntro />
-      <MountainDivider />
-      <ServicesOverview />
-      <MountainDivider />
-      <VignetteSection />
-      <MountainDivider />
-      <DualCTA />
-      <FAQSection />
+      </section>
     </>
   )
 }
